@@ -19,10 +19,7 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 
 #define INTERVAL (20U * US_PER_SEC)
 
-#define LORAWAN_NETW_SESSION_KEY  ***REMOVED***
-#define LORAWAN_APP_SESSION_KEY  ***REMOVED***
-#define LORAWAN_DEV_ADDR ***REMOVED***
-#define LORAWAN_NETW_ID ***REMOVED***
+#include "keys.h"
 
 void on_modem_command_completed_callback(bool with_error)
 {
