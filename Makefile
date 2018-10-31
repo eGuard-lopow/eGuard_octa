@@ -36,7 +36,7 @@ USEMODULE += sht3x  # temperature and humidity sensor
 USEMODULE += saul_default
 USEMODULE += xtimer
 
-EXTERNAL_MODULE_DIRS += $(RIOTBASE)/riot-oss7-modem/drivers/oss7_modem
+EXTERNAL_MODULE_DIRS += $(RIOTBASE)/../riot-oss7-modem/drivers/oss7_modem
 USEMODULE += oss7_modem
 
 INCLUDES += -I$(RIOTBASE)/../riot-oss7-modem//drivers/oss7_modem/include
