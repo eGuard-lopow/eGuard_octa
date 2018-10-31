@@ -1,11 +1,11 @@
 # name of your application
-APPLICATION = oss7modem-sensor-push
+APPLICATION = eGuard_octa
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= octa
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../../../RIOT
+RIOTBASE ?= $(CURDIR)/../../RIOT
 
 # Uncomment these lines if you want to use platform support from external
 # repositories:
@@ -36,10 +36,10 @@ USEMODULE += sht3x  # temperature and humidity sensor
 USEMODULE += saul_default
 USEMODULE += xtimer
 
-EXTERNAL_MODULE_DIRS += $(RIOTPROJECT)/drivers/oss7_modem
+EXTERNAL_MODULE_DIRS += $(RIOTBASE)/riot-oss7-modem/drivers/oss7_modem
 USEMODULE += oss7_modem
 
-INCLUDES += -I$(RIOTPROJECT)/drivers/oss7_modem/include
+INCLUDES += -I$(RIOTBASE)/../riot-oss7-modem//drivers/oss7_modem/include
 
 include $(RIOTBASE)/Makefile.include
 
