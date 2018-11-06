@@ -35,6 +35,7 @@ USEMODULE += sht3x  # temperature and humidity sensor
 # include and auto-initialize all available sensors
 USEMODULE += saul_default
 USEMODULE += xtimer
+USEMODULE += periph_gpio_irq
 
 EXTERNAL_MODULE_DIRS += $(RIOTBASE)/../riot-oss7-modem/drivers/oss7_modem
 USEMODULE += oss7_modem
@@ -42,5 +43,10 @@ USEMODULE += oss7_modem
 INCLUDES += -I$(RIOTBASE)/../riot-oss7-modem//drivers/oss7_modem/include
 
 include $(RIOTBASE)/Makefile.include
+
+# add sensorfolder:
+USEMODULE += sensors
+INCLUDES += -I$(CURDIR)/sensors
+DIRS += $(CURDIR)/sensors
 
 CFLAGS += -DDEBUG_ASSERT_VERBOSE

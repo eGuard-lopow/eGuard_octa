@@ -12,8 +12,7 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 #include "xtimer.h"
 #include "errors.h"
 
-#include "sht3x.h"
-#include "sht3x_params.h"
+#include "sensors/sensor_sht3x.h"
 
 #include "modem.h"
 
@@ -67,16 +66,14 @@ int main(void)
   // Initialize SHT3x
   // ------------------------------
   sht3x_dev_t dev;
-  int res;
-   puts("SHT3X test application\n");
-   printf("+------------Initializing------------+\n");
-   if ((res = sht3x_init(&dev, &sht3x_params[0])) != SHT3X_OK) {
-    puts("Initialization failed\n");
-    return 1;
-  }
-  else {
-    puts("Initialization successful\n");
-  }
+  puts("SHT3X test application\n");
+  printf("+------------Initializing------------+\n");
+  init_sht3x(&dev);
+  set_alert_sht3x(&dev, 1, 50, 35); //Set High alert set limit
+  set_alert_sht3x(&dev, 2, 45, 30); //Set High alert clear limit
+  set_alert_sht3x(&dev, 3, 22, 10); //Set Low alert clear limit
+  set_alert_sht3x(&dev, 4, 20, 8); //Set Low alert set limit
+  configure_PB15();
 
   // ------------------------------
   // LoRa / D7 example
@@ -124,13 +121,7 @@ int main(void)
       // ------------------------------
       int16_t temp;
       int16_t hum;
-      if ((res = sht3x_read(&dev, &temp, &hum)) == SHT3X_OK) {
-        printf("Temperature [°C]: %d.%02d\n", temp/100, temp%100);
-        printf("Relative Humidity [%%]: %d.%02d\n", hum/100, hum%100);
-      }
-      else {
-        printf("Could not read data from sensor, error %d\n", res);
-      }
+      read_sht3x(&dev, &temp, &hum);
       data[0] = temp & 0xFF;
       data[1] = temp >> 8;
       data[2] = hum & 0xFF;
