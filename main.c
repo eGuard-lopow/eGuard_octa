@@ -6,6 +6,8 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 #include <stdio.h>
 #include <string.h>
 
+#include "keys.h"
+
 #include "thread.h"
 #include "shell.h"
 #include "shell_commands.h"
@@ -17,8 +19,6 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 #include "modem.h"
 
 #define INTERVAL (20U * US_PER_SEC)
-
-#include "keys.h"
 
 void on_modem_command_completed_callback(bool with_error)
 {

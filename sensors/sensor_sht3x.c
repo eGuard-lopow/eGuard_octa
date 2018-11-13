@@ -11,7 +11,7 @@ int init_sht3x(sht3x_dev_t* dev)
         return 1;
     }
     else {
-        puts("Initialization successful\n");
+        puts("Initialization SHT3X successful\n");
     }
     return 0;
 }
