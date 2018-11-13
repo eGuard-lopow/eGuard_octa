@@ -16,6 +16,7 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 #include "errors.h"
 
 #include "sensors/sensor_sht3x.h"
+#include "sensors/sensor_lsm303agr.h"
 
 #include "modem.h"
 
@@ -63,12 +64,19 @@ static lorawan_session_config_abp_t lorawan_session_config = {
 
 int main(void)
 {
+   printf("+------------Initializing------------+\n");
   // ------------------------------
   // Initialize SHT3x
   // ------------------------------
   sht3x_dev_t dev;
-  printf("+------------Initializing------------+\n");
   init_sht3x(&dev);
+
+  // ------------------------------
+  // Initialize LSM303AGR
+  // ------------------------------
+  LSM303AGR_t lsm;
+  init_lsm303agr(&lsm);
+  Configure_Interrupt_lsm303agr();
 
 
   // ------------------------------
