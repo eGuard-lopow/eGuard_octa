@@ -5,6 +5,7 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "keys.h"
 
@@ -37,7 +38,7 @@ void on_modem_write_file_data_callback(uint8_t file_id, uint32_t offset, uint32_
 
 static d7ap_session_config_t d7_session_config = {
   .qos = {
-    .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
+    .qos_resp_mode = SESSION_RESP_MODE_ALL,
     .qos_retry_mode = SESSION_RETRY_MODE_NO
   },
   .dormant_timeout = 0,
@@ -66,14 +67,9 @@ int main(void)
   // Initialize SHT3x
   // ------------------------------
   sht3x_dev_t dev;
-  puts("SHT3X test application\n");
   printf("+------------Initializing------------+\n");
   init_sht3x(&dev);
-  set_alert_sht3x(&dev, 1, 50, 35); //Set High alert set limit
-  set_alert_sht3x(&dev, 2, 45, 30); //Set High alert clear limit
-  set_alert_sht3x(&dev, 3, 22, 10); //Set Low alert clear limit
-  set_alert_sht3x(&dev, 4, 20, 8); //Set Low alert set limit
-  configure_PB15();
+
 
   // ------------------------------
   // LoRa / D7 example

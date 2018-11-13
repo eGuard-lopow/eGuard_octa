@@ -3,16 +3,9 @@
 
 #include <stdio.h>
 #include "shell.h"
-#include "sht3x.h"
 #include <stdlib.h>
 
-#ifndef SHT3X_PARAM_MODE
-#define SHT3X_PARAM_MODE        (sht3x_periodic_05mps)
-#endif
-#ifndef SHT3X_PARAM_REPEAT
-#define SHT3X_PARAM_REPEAT      (sht3x_low)
-#endif
-
+#include "../config.h"
 #include "sht3x_params.h"
 #include "periph/gpio.h"
 
