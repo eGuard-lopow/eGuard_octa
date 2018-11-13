@@ -52,14 +52,17 @@ static d7ap_session_config_t d7_session_config = {
   },
 };
 
-static lorawan_session_config_abp_t lorawan_session_config = {
-  .appSKey = LORAWAN_APP_SESSION_KEY,
-  .nwkSKey = LORAWAN_NETW_SESSION_KEY,
-  .devAddr = LORAWAN_DEV_ADDR,
-  .request_ack = false,
-  .network_id = LORAWAN_NETW_ID,
-  .application_port = 1
-};
+uint8_t counter = 0;
+uint32_t press = 0;
+static void button_pressed(void *arg)
+{
+    if (xtimer_now_usec()>press+(1*US_PER_SEC)) {
+      press = xtimer_now_usec();
+      printf("Pressed BTN%d\n", (int)arg);
+      printf("counter = %d\n", counter);
+      counter++;
+    }
+}
 
 int main(void)
 {
@@ -91,41 +94,20 @@ int main(void)
     xtimer_ticks32_t last_wakeup = xtimer_now();
     alp_itf_id_t current_interface_id = ALP_ITF_ID_D7ASP;
     void* current_interface_config = (void*)&d7_session_config;
-    uint8_t counter = 0;
-    uint8_t data[4];
-    while(1) {
-      // ------------------------------
-      // Change communication protocol
-      // ------------------------------
-      // counter = 1; // only use dash-7
-      uint32_t start = xtimer_now_usec();
-      if(counter % 5 == 0) {
-        if(current_interface_id == ALP_ITF_ID_D7ASP) {
-          printf("Switching to LoRaWAN\n");
-          current_interface_id = ALP_ITF_ID_LORAWAN_ABP;
-          current_interface_config = &lorawan_session_config;
-        } else {
-          printf("Switching to D7AP\n");
-          current_interface_id = ALP_ITF_ID_D7ASP;
-          current_interface_config = &d7_session_config;
-        }
-      }
-      // counter = 1; // only use lora
 
-      // ------------------------------
-      // Perform Measurement
-      // ------------------------------
-      int16_t temp;
-      int16_t hum;
-      read_sht3x(&dev, &temp, &hum);
-      data[0] = temp & 0xFF;
-      data[1] = temp >> 8;
-      data[2] = hum & 0xFF;
-      data[3] = hum >> 8;
+    if (gpio_init_int(BTN0_PIN, BTN0_MODE, GPIO_FALLING, button_pressed, 0) < 0) {
+      puts("[FAILED] init BTN0!");
+      return 1;
+    }
+
+    while(1) {
 
       // ------------------------------
       // Transmit Data
       // ------------------------------
+      uint32_t start = xtimer_now_usec();
+
+      uint8_t data[] = { 0, 0, 0, 0 };
       printf("Sending msg with data [ %i, %i, %i, %i ]\n", data[0], data[1], data[2], data[3]);
       modem_status_t status = modem_send_unsolicited_response(0x40, 0, 4, &data[0], current_interface_id, current_interface_config);
       uint32_t duration_usec = xtimer_now_usec() - start;
@@ -138,7 +120,6 @@ int main(void)
         printf("Command timed out\n");
       }
 
-      counter++;
       xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
       printf("slept until %" PRIu32 "\n", xtimer_usec_from_ticks(xtimer_now()));
       printf("------------------------------\n");
