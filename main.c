@@ -9,13 +9,8 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 
 #include "keys.h"
 
-#include "thread.h"
-#include "shell.h"
-#include "shell_commands.h"
 #include "xtimer.h"
 #include "errors.h"
-
-#include "sensors/sensor_sht3x.h"
 
 #include "modem.h"
 
@@ -53,65 +48,20 @@ static d7ap_session_config_t d7_session_config = {
 };
 
 uint8_t counter = 0;
-uint32_t press = 0;
+uint32_t press_time = 0;
 static void button_pressed(void *arg)
 {
-    if (xtimer_now_usec()>press+(1*US_PER_SEC)) {
-      press = xtimer_now_usec();
+    if (xtimer_now_usec()>press_time+(1*US_PER_SEC)) {
+      printf("--------------- Button Pressed ---------------\n");
+      press_time = xtimer_now_usec();
+      // --------------------
       printf("Pressed BTN%d\n", (int)arg);
       printf("counter = %d\n", counter);
-      counter++;
-    }
-}
-
-int main(void)
-{
-  // ------------------------------
-  // Initialize SHT3x
-  // ------------------------------
-  sht3x_dev_t dev;
-  printf("+------------Initializing------------+\n");
-  init_sht3x(&dev);
-
-
-  // ------------------------------
-  // LoRa / D7 example
-  // ------------------------------
-    puts("Welcome to RIOT!");
-
-    modem_callbacks_t modem_callbacks = {
-      .command_completed_callback = &on_modem_command_completed_callback,
-      .return_file_data_callback = &on_modem_return_file_data_callback,
-      .write_file_data_callback = &on_modem_write_file_data_callback,
-    };
-
-    modem_init(UART_DEV(1), &modem_callbacks);
-
-    uint8_t uid[D7A_FILE_UID_SIZE];
-    modem_read_file(D7A_FILE_UID_FILE_ID, 0, D7A_FILE_UID_SIZE, uid);
-    printf("modem UID: %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
-
-    xtimer_ticks32_t last_wakeup = xtimer_now();
-    alp_itf_id_t current_interface_id = ALP_ITF_ID_D7ASP;
-    void* current_interface_config = (void*)&d7_session_config;
-
-    if (gpio_init_int(BTN0_PIN, BTN0_MODE, GPIO_FALLING, button_pressed, 0) < 0) {
-      puts("[FAILED] init BTN0!");
-      return 1;
-    }
-
-    while(1) {
-
-      // ------------------------------
-      // Transmit Data
-      // ------------------------------
-      uint32_t start = xtimer_now_usec();
-
       uint8_t data[] = { 0, 0, 0, 0 };
+      alp_itf_id_t current_interface_id = ALP_ITF_ID_D7ASP;
+      void* current_interface_config = (void*)&d7_session_config;
       printf("Sending msg with data [ %i, %i, %i, %i ]\n", data[0], data[1], data[2], data[3]);
-      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 4, &data[0], current_interface_id, current_interface_config);
-      uint32_t duration_usec = xtimer_now_usec() - start;
-      printf("Command completed in %li ms\n", duration_usec / 1000);
+      modem_status_t status = modem_send_unsolicited_response(0x32, 0, 4, &data[0], current_interface_id, current_interface_config);
       if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
         printf("Command completed successfully\n");
       } else if(status == MODEM_STATUS_COMMAND_COMPLETED_ERROR) {
@@ -119,10 +69,42 @@ int main(void)
       } else if(status == MODEM_STATUS_COMMAND_TIMEOUT) {
         printf("Command timed out\n");
       }
+      // --------------------
+      counter++;
+      printf("----------------------------------------------\n");
+    }
+}
 
+int main(void)
+{
+    // ------------------------------
+    // Initialize modem
+    // ------------------------------
+    modem_callbacks_t modem_callbacks = {
+      .command_completed_callback = &on_modem_command_completed_callback,
+      .return_file_data_callback = &on_modem_return_file_data_callback,
+      .write_file_data_callback = &on_modem_write_file_data_callback,
+    };
+    modem_init(UART_DEV(1), &modem_callbacks);
+    uint8_t uid[D7A_FILE_UID_SIZE];
+    modem_read_file(D7A_FILE_UID_FILE_ID, 0, D7A_FILE_UID_SIZE, uid);
+    printf("modem UID: %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
+
+    // ------------------------------
+    // Initialize Button
+    // ------------------------------
+    if (gpio_init_int(BTN0_PIN, BTN0_MODE, GPIO_FALLING, button_pressed, 0) < 0) {
+      puts("Failed to initialize BTN0");
+      return 1;
+    }
+
+    // ------------------------------
+    // Loop
+    // ------------------------------
+    xtimer_ticks32_t last_wakeup = xtimer_now();
+    while(1) {
+      // <do stuff every interval>
       xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
-      printf("slept until %" PRIu32 "\n", xtimer_usec_from_ticks(xtimer_now()));
-      printf("------------------------------\n");
     }
 
     return 0;
