@@ -14,7 +14,7 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 
 #include "modem.h"
 
-#define INTERVAL (20U * US_PER_SEC)
+#define INTERVAL (1U * US_PER_SEC)
 
 void on_modem_command_completed_callback(bool with_error)
 {
@@ -47,32 +47,14 @@ static d7ap_session_config_t d7_session_config = {
   },
 };
 
+volatile bool button_flag = false;
+
 uint8_t counter = 0;
 uint32_t press_time = 0;
 static void button_pressed(void *arg)
 {
-    if (xtimer_now_usec()>press_time+(1*US_PER_SEC)) {
-      printf("--------------- Button Pressed ---------------\n");
-      press_time = xtimer_now_usec();
-      // --------------------
-      printf("Pressed BTN%d\n", (int)arg);
-      printf("counter = %d\n", counter);
-      uint8_t data[] = { 0, 0, 0, 0 };
-      alp_itf_id_t current_interface_id = ALP_ITF_ID_D7ASP;
-      void* current_interface_config = (void*)&d7_session_config;
-      printf("Sending msg with data [ %i, %i, %i, %i ]\n", data[0], data[1], data[2], data[3]);
-      modem_status_t status = modem_send_unsolicited_response(0x32, 0, 4, &data[0], current_interface_id, current_interface_config);
-      if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
-        printf("Command completed successfully\n");
-      } else if(status == MODEM_STATUS_COMMAND_COMPLETED_ERROR) {
-        printf("Command completed with error\n");
-      } else if(status == MODEM_STATUS_COMMAND_TIMEOUT) {
-        printf("Command timed out\n");
-      }
-      // --------------------
-      counter++;
-      printf("----------------------------------------------\n");
-    }
+  printf("Pressed BTN%d\n", (int)arg);
+  button_flag = true;
 }
 
 int main(void)
@@ -103,6 +85,40 @@ int main(void)
     // ------------------------------
     xtimer_ticks32_t last_wakeup = xtimer_now();
     while(1) {
+      if (button_flag==true) {
+        if (xtimer_now_usec()>press_time+(1*US_PER_SEC)) {
+          printf("--------------- Button Pressed ---------------\n");
+          press_time = xtimer_now_usec();
+          // --------------------
+          printf("Pressed BTN\n");
+          printf("counter = %d\n", counter);
+          uint8_t data[] = { 0, 0, 0, 0 };
+          alp_itf_id_t current_interface_id = ALP_ITF_ID_D7ASP;
+          void* current_interface_config = (void*)&d7_session_config;
+          printf("Sending msg with data [ %i, %i, %i, %i ]\n", data[0], data[1], data[2], data[3]);
+          uint32_t send_time = 0;
+          for ( uint8_t i=0; i<20; ++i ) {
+            while (xtimer_now_usec()<send_time+(10*US_PER_SEC)) {
+              // block
+            }
+            send_time = xtimer_now_usec();
+            printf("i=%i",i);
+            modem_status_t status = modem_send_unsolicited_response(0x32, 0, 4, &data[0], current_interface_id, current_interface_config);
+            if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
+              printf("Command completed successfully\n");
+            } else if(status == MODEM_STATUS_COMMAND_COMPLETED_ERROR) {
+              printf("Command completed with error\n");
+            } else if(status == MODEM_STATUS_COMMAND_TIMEOUT) {
+              printf("Command timed out\n");
+            }
+          }
+
+          // --------------------
+          counter++;
+          printf("----------------------------------------------\n");
+        }
+        button_flag = false;
+      }
       // <do stuff every interval>
       xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
     }
