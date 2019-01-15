@@ -5,6 +5,9 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+#include "keys.h"
 
 #include "thread.h"
 #include "shell.h"
@@ -12,14 +15,12 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 #include "xtimer.h"
 #include "errors.h"
 
-#include "sht3x.h"
-#include "sht3x_params.h"
+#include "sensors/sensor_sht3x.h"
+#include "sensors/sensor_lsm303agr.h"
 
 #include "modem.h"
 
 #define INTERVAL (20U * US_PER_SEC)
-
-#include "keys.h"
 
 void on_modem_command_completed_callback(bool with_error)
 {
@@ -38,7 +39,7 @@ void on_modem_write_file_data_callback(uint8_t file_id, uint32_t offset, uint32_
 
 static d7ap_session_config_t d7_session_config = {
   .qos = {
-    .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
+    .qos_resp_mode = SESSION_RESP_MODE_ALL,
     .qos_retry_mode = SESSION_RETRY_MODE_NO
   },
   .dormant_timeout = 0,
@@ -63,20 +64,20 @@ static lorawan_session_config_abp_t lorawan_session_config = {
 
 int main(void)
 {
+   printf("+------------Initializing------------+\n");
   // ------------------------------
   // Initialize SHT3x
   // ------------------------------
   sht3x_dev_t dev;
-  int res;
-   puts("SHT3X test application\n");
-   printf("+------------Initializing------------+\n");
-   if ((res = sht3x_init(&dev, &sht3x_params[0])) != SHT3X_OK) {
-    puts("Initialization failed\n");
-    return 1;
-  }
-  else {
-    puts("Initialization successful\n");
-  }
+  init_sht3x(&dev);
+
+  // ------------------------------
+  // Initialize LSM303AGR
+  // ------------------------------
+  LSM303AGR_t lsm;
+  init_lsm303agr(&lsm);
+  Configure_Interrupt_lsm303agr();
+
 
   // ------------------------------
   // LoRa / D7 example
@@ -124,13 +125,7 @@ int main(void)
       // ------------------------------
       int16_t temp;
       int16_t hum;
-      if ((res = sht3x_read(&dev, &temp, &hum)) == SHT3X_OK) {
-        printf("Temperature [°C]: %d.%02d\n", temp/100, temp%100);
-        printf("Relative Humidity [%%]: %d.%02d\n", hum/100, hum%100);
-      }
-      else {
-        printf("Could not read data from sensor, error %d\n", res);
-      }
+      read_sht3x(&dev, &temp, &hum);
       data[0] = temp & 0xFF;
       data[1] = temp >> 8;
       data[2] = hum & 0xFF;
