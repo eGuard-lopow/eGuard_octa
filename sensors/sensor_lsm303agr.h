@@ -9,7 +9,7 @@
 #include "lsm303agr_params.h"
 #include "periph/gpio.h"
 
-int init_lsm303agr(LSM303AGR_t* dev);
+int init_lsm303agr(LSM303AGR_t* dev, int cm);
 int read_lsm303agr(LSM303AGR_t* dev);
 void Configure_Interrupt_lsm303agr(void);
 
