@@ -15,6 +15,10 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 #include "xtimer.h"
 #include "errors.h"
 
+#include "xm1110.h"
+#include "xm1110_params.h"
+#include "minmea.h"
+
 #include "sensors/sensor_sht3x.h"
 #include "sensors/sensor_lsm303agr.h"
 
@@ -62,9 +66,79 @@ static lorawan_session_config_abp_t lorawan_session_config = {
   .application_port = 1
 };
 
+void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
+  // 
+  char* token;
+  struct minmea_sentence_rmc frame;
+
+  float latitude_float = 0.0;
+  float longitude_float = 0.0;
+
+  uint32_t latitude_int;
+  uint32_t longitude_int;
+
+  int res = 0;
+
+
+  // Read GPS coordinates and store them in payload
+  for(int i = 0; i<5; i++) {
+    res = xm1110_read(dev, xmdata);
+    if ( res == 0 ) {
+      for(int i = 0;i<255;i++){
+        xmdata->data[i] = xmdata->data[i]%256;
+        printf("%c", xmdata->data[i]);
+      }
+    }
+
+    token = strtok (xmdata->data,"\n");
+    while (token != NULL) {
+      printf("\nGPS:   *Zin*:  %s\n",token);
+  
+      puts("GPS: START");
+
+      switch (minmea_sentence_id(token, false)) {
+        case MINMEA_SENTENCE_RMC: { //$GNRMC
+          if (minmea_parse_rmc(&frame, token)) {
+            printf("$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
+                  minmea_tocoord(&frame.latitude),
+                  minmea_tocoord(&frame.longitude),
+                  minmea_tofloat(&frame.speed));
+            latitude_float = minmea_tofloat(&frame.latitude);
+            longitude_float = minmea_tofloat(&frame.longitude);
+          }
+        } break;
+
+        default: {
+          //do nothing
+        }
+      }
+      puts("GPS: STOP");
+      
+      token = strtok (NULL, "\n");
+    }
+  }
+
+  // Convert floats in bytes
+  // latitude_int = (uint32_t)(test_float1*1000000);
+  // longitude_int = (uint32_t)(test_float2*1000000);
+  
+  latitude_int = (uint32_t)(latitude_float*1000000);
+  longitude_int = (uint32_t)(longitude_float*1000000);
+
+  payload[0] = (latitude_int & 0xFF000000) >> 24;
+  payload[1] = (latitude_int & 0x00FF0000) >> 16;
+  payload[2] = (latitude_int & 0x0000FF00) >> 8;
+  payload[3] = (latitude_int & 0x000000FF);
+
+  payload[4] = (longitude_int & 0xFF000000) >> 24;
+  payload[5] = (longitude_int & 0x00FF0000) >> 16;
+  payload[6] = (longitude_int & 0x0000FF00) >> 8;
+  payload[7] = (longitude_int & 0x000000FF);
+}
+
 int main(void)
 {
-   printf("+------------Initializing------------+\n");
+  printf("+------------Initializing------------+\n");
   // ------------------------------
   // Initialize SHT3x
   // ------------------------------
@@ -78,6 +152,26 @@ int main(void)
   init_lsm303agr(&lsm, 35);
   Configure_Interrupt_lsm303agr();
 
+  // ------------------------------
+  // Initialize GPS
+  // ------------------------------
+  xm1110_t dev_xm1110;
+  int res;
+
+  if ((res = xm1110_init(&dev_xm1110, &xm1110_params[0])) != XM1110_OK) {
+      puts("GPS:Initialization failed\n");
+      return XM1110_NO_DEV;
+  }
+  else {
+      puts("GPS:Initialization successful\n");
+  }
+
+  xm1110_data_t xmdata;
+
+  // float test_float1 = 51.163977;
+  // float test_float2 = 37.413983;
+
+  uint8_t payload[8];
 
   // ------------------------------
   // LoRa / D7 example
@@ -122,7 +216,7 @@ int main(void)
       // counter = 1; // only use lora
 
       // ------------------------------
-      // Perform Measurement
+      // Perform Measurements
       // ------------------------------
       int16_t temp;
       int16_t hum;
@@ -131,6 +225,12 @@ int main(void)
       data[1] = temp >> 8;
       data[2] = hum & 0xFF;
       data[3] = hum >> 8;
+
+      // ------------------------------
+      // Perform GPS Measurement
+      // ------------------------------
+      readGPS(&dev_xm1110, &xmdata, payload);
+      printf("\nGPS Payload: [%i, %i, %i, %i, %i, %i, %i, %i]", payload[0], payload[1], payload[2], payload[3], payload[4], payload[5], payload[6], payload[7]);
 
       // ------------------------------
       // Transmit Data

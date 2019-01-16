@@ -15,11 +15,20 @@ Low power project
 ifneq (,$(filter lsm303agr,$(USEMODULE)))
   FEATURES_REQUIRED += periph_i2c
 endif
+
+ifneq (,$(filter xm1110, $(USEMODULE)))
+  USEMODULE += xtimer
+  FEATURES_REQUIRED += periph_i2c
+endif
 ```
 
 - Edit the `RIOTBASE/drivers/Makefile.include` file and add the following code:
 ```
 ifneq (,$(filter lsm303agr,$(USEMODULE)))
   USEMODULE_INCLUDES += $(RIOTBASE)/drivers/lsm303agr/include
+endif
+
+ifneq (,$(filter xm1110,$(USEMODULE)))
+  USEMODULE_INCLUDES += $(RIOTBASE)/drivers/xm1110/include
 endif
 ```

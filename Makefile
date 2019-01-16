@@ -33,11 +33,17 @@ USEMODULE += shell_commands
 USEMODULE += ps
 USEMODULE += sht3x  # temperature and humidity sensor
 USEMODULE += lsm303agr
+
 # include and auto-initialize all available sensors
-USEMODULE += saul_default
+# USEMODULE += saul_default
 USEMODULE += xtimer
 USEMODULE += periph_gpio_irq
 
+# GPS packages
+USEMODULE += xm1110
+USEPKG += minmea
+
+# Modem
 EXTERNAL_MODULE_DIRS += $(RIOTBASE)/../riot-oss7-modem/drivers/oss7_modem
 USEMODULE += oss7_modem
 
