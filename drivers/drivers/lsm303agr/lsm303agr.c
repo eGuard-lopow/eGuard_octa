@@ -186,7 +186,7 @@ int LSM303AGR_read_temp(const LSM303AGR_t *dev, int16_t *value)
     return 0;
 }
 
-int LSM303AGR_enable_interrupt(const LSM303AGR_t *dev)
+int LSM303AGR_enable_interrupt(const LSM303AGR_t *dev, int cm)
 {
 	int res = 0;
 	uint8_t tmp;
@@ -197,13 +197,14 @@ int LSM303AGR_enable_interrupt(const LSM303AGR_t *dev)
 	//page 55 in manual for registers
     i2c_acquire(DEV_I2C);
 	
-	/* tmp = (LSM303AGR_CTRL1_A_XEN
+	
+	 tmp = (LSM303AGR_CTRL1_A_XEN
           | LSM303AGR_CTRL1_A_YEN
           | LSM303AGR_CTRL1_A_ZEN
-          | LSM303AGR_CTRL1_A_LOW_POWER
-		  | LSM303AGR_CTRL1_A_1HZ);
+		  | LSM303AGR_CTRL1_A_10HZ);
     res += i2c_write_reg(DEV_I2C, DEV_ACC_ADDR,
                          LSM303AGR_REG_CTRL1_A, tmp, 0);
+						 /*
 	res += i2c_write_reg(DEV_I2C, DEV_ACC_ADDR,
                          LSM303AGR_REG_ACT_THS_A, 0x0F, 0); // *16mg for 2G
 	res += i2c_write_reg(DEV_I2C, DEV_ACC_ADDR,
@@ -220,8 +221,20 @@ int LSM303AGR_enable_interrupt(const LSM303AGR_t *dev)
     //                    LSM303AGR_REG_CTRL5_A ,0x08, 0); //Interrupt latched
 	res += i2c_write_reg(DEV_I2C, DEV_ACC_ADDR,
                         LSM303AGR_REG_INT1_THS_A ,0x16, 0); //Set free fall threshold = 350mg (*16mg for 2G)
-	res += i2c_write_reg(DEV_I2C, DEV_ACC_ADDR,
-                        LSM303AGR_REG_INT1_DURATION_A ,0x01, 0); //Set minimum event duration (/ODR (default 10Hz)) max = 0x7F
+	switch (cm){
+		case 40:
+		res += i2c_write_reg(DEV_I2C, DEV_ACC_ADDR,
+                        LSM303AGR_REG_INT1_DURATION_A ,0x02, 0); //Set minimum event duration (/ODR (default 10Hz)) max = 0x7F
+		break;
+		case 90:
+		res += i2c_write_reg(DEV_I2C, DEV_ACC_ADDR,
+                        LSM303AGR_REG_INT1_DURATION_A ,0x03, 0); 
+		break;
+		default:
+		res += i2c_write_reg(DEV_I2C, DEV_ACC_ADDR,
+                        LSM303AGR_REG_INT1_DURATION_A ,0x01, 0); 
+		break;
+	}
 	tmp = (LSM303AGR_INT1_XLIE
 				  | LSM303AGR_INT1_YLIE
 				  | LSM303AGR_INT1_ZLIE
