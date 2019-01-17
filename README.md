@@ -1,7 +1,7 @@
 # eGuard_octa
 Low power project
 
-Hardware requirements:
+## Hardware
 - Mount the Murata modem shield on P1
 - Mount the GPS shield on P2
 
