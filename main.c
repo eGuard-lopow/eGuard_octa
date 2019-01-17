@@ -164,15 +164,12 @@ void exampleLightSensor() {
     return -1;
   }
 
-  while (1) {
-    tcs34725_read(&dev, &data);
-    printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
-        data.red, data.green, data.blue, data.clear);
-    printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
-        data.ct, data.lux, dev.again, dev.p.atime);
+  tcs34725_read(&dev, &data);
+  printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
+      data.red, data.green, data.blue, data.clear);
+  printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
+      data.ct, data.lux, dev.again, dev.p.atime);
 
-    xtimer_usleep(SLEEP);
-  }
 
   return 0;
 }
