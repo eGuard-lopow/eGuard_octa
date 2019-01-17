@@ -149,6 +149,34 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   payload[7] = (longitude_int & 0x000000FF);
 }
 
+void exampleLightSensor() {
+  tcs34725_t dev;
+  tcs34725_data_t data;
+
+  puts("TCS34725 RGBC Data; Sensor driver test application\r\n");
+  printf("Initializing first configured TCS34725 sensor...\r\n");
+
+  if (tcs34725_init(&dev, &tcs34725_params[0]) == TCS34725_OK) {
+    puts("[OK]\r\n");
+  }
+  else {
+    puts("[Failed]\r\n");
+    return -1;
+  }
+
+  while (1) {
+    tcs34725_read(&dev, &data);
+    printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
+        data.red, data.green, data.blue, data.clear);
+    printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
+        data.ct, data.lux, dev.again, dev.p.atime);
+
+    xtimer_usleep(SLEEP);
+  }
+
+  return 0;
+}
+
 
 
 void measurementLoop(int loopCounter){
