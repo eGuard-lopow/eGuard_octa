@@ -1,6 +1,10 @@
 # eGuard_octa
 Low power project
 
+Hardware requirements:
+	- Mount the Murata modem shield on P1
+	- Mount the GPS shield on P2
+
 ## Configure
 - Add your device's ABP keys to `template_keys.h` and rename this file to `keys.h`
 
@@ -31,4 +35,32 @@ endif
 ifneq (,$(filter xm1110,$(USEMODULE)))
   USEMODULE_INCLUDES += $(RIOTBASE)/drivers/xm1110/include
 endif
+```
+
+- Edit the `RIOTBASE/boards/octa/include/periph_conf.h` file en replace the I2C-config with the following:
+```
+static const i2c_conf_t i2c_config[] = {
+    {
+        .dev            = I2C1,
+        .speed          = I2C_SPEED_NORMAL,
+        .scl_pin        = GPIO_PIN(PORT_B, 8),
+        .sda_pin        = GPIO_PIN(PORT_B, 9),
+        .scl_af         = GPIO_AF4,
+        .sda_af         = GPIO_AF4,
+        .bus            = APB1,
+        .rcc_mask       = RCC_APB1ENR1_I2C1EN,
+        .irqn           = I2C1_EV_IRQn
+    },
+    {
+        .dev            = I2C2,
+        .speed          = I2C_SPEED_NORMAL,
+        .scl_pin        = GPIO_PIN(PORT_F, 0),
+        .sda_pin        = GPIO_PIN(PORT_F, 1),
+        .scl_af         = GPIO_AF4,
+        .sda_af         = GPIO_AF4,
+        .bus            = APB1,
+        .rcc_mask       = RCC_APB1ENR1_I2C2EN,
+        .irqn           = I2C2_EV_IRQn
+    }
+};
 ```
