@@ -177,7 +177,6 @@ void measurementLoop(int loopCounter){
   if(loopCounter == 255){
     data[0] = data[0] | 3;
     printf("FALL ALLERT\n");
-    loopCounter = 0;
   }
     
   // ------------------------------
