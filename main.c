@@ -19,6 +19,9 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 #include "xm1110_params.h"
 #include "minmea.h"
 
+#include "tcs34725.h"
+#include "tcs34725_params.h"
+
 #include "sensors/sensor_sht3x.h"
 #include "sensors/sensor_lsm303agr.h"
 
@@ -149,31 +152,6 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   payload[7] = (longitude_int & 0x000000FF);
 }
 
-void exampleLightSensor() {
-  tcs34725_t dev;
-  tcs34725_data_t data;
-
-  puts("TCS34725 RGBC Data; Sensor driver test application\r\n");
-  printf("Initializing first configured TCS34725 sensor...\r\n");
-
-  if (tcs34725_init(&dev, &tcs34725_params[0]) == TCS34725_OK) {
-    puts("[OK]\r\n");
-  }
-  else {
-    puts("[Failed]\r\n");
-    return -1;
-  }
-
-  tcs34725_read(&dev, &data);
-  printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
-      data.red, data.green, data.blue, data.clear);
-  printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
-      data.ct, data.lux, dev.again, dev.p.atime);
-
-
-  return 0;
-}
-
 
 
 void measurementLoop(int loopCounter){
@@ -258,6 +236,27 @@ void cb_lsm303agr(void *arg)
     measurementLoop(255);
 }
 
+void examplelightsensor(void) {
+  tcs34725_t dev_tcs;
+  tcs34725_data_t data_tcs;
+
+  puts("TCS34725 RGBC Data; Sensor driver test application\r\n");
+  printf("Initializing first configured TCS34725 sensor...\r\n");
+
+  if (tcs34725_init(&dev_tcs, &tcs34725_params[0]) == TCS34725_OK) {
+    puts("[OK]\r\n");
+  }
+  else {
+    puts("[Failed]\r\n");
+  }
+
+  tcs34725_read(&dev_tcs, &data_tcs);
+  printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
+      data_tcs.red, data_tcs.green, data_tcs.blue, data_tcs.clear);
+  printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
+      data_tcs.ct, data_tcs.lux, dev_tcs.again, dev_tcs.p.atime);
+}
+
 void Configure_Interrupt_lsm303agr(void) {
     gpio_init_int(GPIO_PIN(PORT_B, 13),GPIO_IN,GPIO_RISING, cb_lsm303agr, (void*) 0); //INT_1 from lsm303agr
     gpio_irq_enable(GPIO_PIN(PORT_B, 13));
@@ -304,6 +303,7 @@ int main(void)
       // ------------------------------
       // Main loop
       // ------------------------------
+    
     
     while(1) {
       start = xtimer_now_usec();

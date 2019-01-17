@@ -33,6 +33,7 @@ USEMODULE += shell_commands
 USEMODULE += ps
 USEMODULE += sht3x  # temperature and humidity sensor
 USEMODULE += lsm303agr
+USEMODULE += tcs34725
 
 # include and auto-initialize all available sensors
 # USEMODULE += saul_default
