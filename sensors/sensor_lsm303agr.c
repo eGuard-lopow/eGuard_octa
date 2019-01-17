@@ -2,13 +2,13 @@
 #include "sensor_lsm303agr.h"
 
 //initialize and enable device using the parameters in the header
-int init_lsm303agr(LSM303AGR_t* dev)
+int init_lsm303agr(LSM303AGR_t* dev, int cm)
 {   
     int res = LSM303AGR_init(dev, &LSM303AGR_params[0]);
     res += LSM303AGR_enable(dev);
-    res += LSM303AGR_enable_interrupt(dev);
+    res += LSM303AGR_enable_interrupt(dev, cm);
     if (res == 0){
-        puts("Initialized LSM303AGR\n");
+        puts("Initialized LSM303AGR\n"); //should initialize using 2 options: unrespectfull: 10Hz, 0x02 duration, 40cm; 10Hz, 0x03 duration, 90cm
     } else {
         puts("Initializing LSM303AGR FAILED");
     }
@@ -50,12 +50,8 @@ void cb_lsm1(void *arg)
     if (arg != NULL) {
         //do something?
     }
-    //int8_t value;
-    //if(LSM303AGR_clear_int(&dev, &value) == 0){
-    //    puts("Interrupt cleared");
-    //}
 
-    printf("Fall Detected INT1!\n");
+    printf("Fall Detected\n");
 }
 
 

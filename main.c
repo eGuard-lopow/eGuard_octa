@@ -69,13 +69,13 @@ int main(void)
   // Initialize SHT3x
   // ------------------------------
   sht3x_dev_t dev;
-  init_sht3x(&dev);
+  init_sht3x(&dev); 
 
   // ------------------------------
   // Initialize LSM303AGR
   // ------------------------------
   LSM303AGR_t lsm;
-  init_lsm303agr(&lsm);
+  init_lsm303agr(&lsm, 35);
   Configure_Interrupt_lsm303agr();
 
 
@@ -108,14 +108,15 @@ int main(void)
       // counter = 1; // only use dash-7
       uint32_t start = xtimer_now_usec();
       if(counter % 5 == 0) {
+        printf("\n");
         if(current_interface_id == ALP_ITF_ID_D7ASP) {
           printf("Switching to LoRaWAN\n");
           current_interface_id = ALP_ITF_ID_LORAWAN_ABP;
           current_interface_config = &lorawan_session_config;
         } else {
-          printf("Switching to D7AP\n");
-          current_interface_id = ALP_ITF_ID_D7ASP;
-          current_interface_config = &d7_session_config;
+          //printf("Switching to D7AP\n");
+          //current_interface_id = ALP_ITF_ID_D7ASP;
+          //current_interface_config = &d7_session_config;
         }
       }
       // counter = 1; // only use lora
@@ -134,6 +135,7 @@ int main(void)
       // ------------------------------
       // Transmit Data
       // ------------------------------
+      //while(true) { //this loop is for testing
       printf("Sending msg with data [ %i, %i, %i, %i ]\n", data[0], data[1], data[2], data[3]);
       modem_status_t status = modem_send_unsolicited_response(0x40, 0, 4, &data[0], current_interface_id, current_interface_config);
       uint32_t duration_usec = xtimer_now_usec() - start;
@@ -150,6 +152,7 @@ int main(void)
       xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
       printf("slept until %" PRIu32 "\n", xtimer_usec_from_ticks(xtimer_now()));
       printf("------------------------------\n");
+    
     }
 
     return 0;
