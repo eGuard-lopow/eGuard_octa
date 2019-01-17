@@ -24,6 +24,10 @@ ifneq (,$(filter xm1110, $(USEMODULE)))
   USEMODULE += xtimer
   FEATURES_REQUIRED += periph_i2c
 endif
+
+ifneq (,$(filter tcs34725,$(USEMODULE)))
+  FEATURES_REQUIRED += periph_i2c
+endif
 ```
 
 - Edit the `RIOTBASE/drivers/Makefile.include` file and add the following code:
@@ -34,6 +38,10 @@ endif
 
 ifneq (,$(filter xm1110,$(USEMODULE)))
   USEMODULE_INCLUDES += $(RIOTBASE)/drivers/xm1110/include
+endif
+
+ifneq (,$(filter tcs34725,$(USEMODULE)))
+  USEMODULE_INCLUDES += $(RIOTBASE)/drivers/tcs34725/include
 endif
 ```
 
