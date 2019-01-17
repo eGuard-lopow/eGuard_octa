@@ -45,19 +45,4 @@ int read_lsm303agr(LSM303AGR_t* dev)
 }
 
 
-void cb_lsm1(void *arg)
-{
-    if (arg != NULL) {
-        //do something?
-    }
-
-    printf("Fall Detected\n");
-}
-
-
-void Configure_Interrupt_lsm303agr(void) {
-    gpio_init_int(GPIO_PIN(PORT_B, 13),GPIO_IN,GPIO_RISING, cb_lsm1, (void*) 0); //INT_1 from lsm303agr
-    gpio_irq_enable(GPIO_PIN(PORT_B, 13));
-}
-
 

@@ -26,6 +26,18 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 
 #define INTERVAL (20U * US_PER_SEC)
 
+uint8_t localization = GPS;
+uint8_t data[13];
+int16_t temp;
+int16_t hum;
+bool tempAlert;
+uint32_t start;
+sht3x_dev_t dev_sht3x;
+LSM303AGR_t lsm;
+xm1110_t dev_xm1110;
+xm1110_data_t xmdata;
+uint8_t payload[8];
+
 void on_modem_command_completed_callback(bool with_error)
 {
   printf("modem command completed (success = %i)\n", !with_error);
@@ -65,6 +77,7 @@ static lorawan_session_config_abp_t lorawan_session_config = {
   .network_id = LORAWAN_NETW_ID,
   .application_port = 1
 };
+
 
 void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   // 
@@ -136,28 +149,108 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   payload[7] = (longitude_int & 0x000000FF);
 }
 
+
+
+void measurementLoop(int loopCounter){
+  // ------------------------------
+  // Reset parameters/flags
+  // ------------------------------
+  data[0] = 0;
+  tempAlert = false;
+  printf("entered measurement loop, loopCounter = %d \n",loopCounter);
+
+
+
+  // ------------------------------
+  // Periodic temperature measurement
+  // ------------------------------
+  read_sht3x(&dev_sht3x, &temp, &hum);
+  data[1] = temp & 0xFF;
+  data[2] = temp >> 8;
+  data[3] = hum & 0xFF;
+  data[4] = hum >> 8;
+  if(temp / 100 > 29){
+    tempAlert = true;
+    data[0] = data[0] | 5; 
+    printf("TEMP ALERT\n");
+  }
+  if(loopCounter == 255){
+    data[0] = data[0] | 3;
+    printf("FALL ALLERT\n");
+    loopCounter = 0;
+  }
+    
+  // ------------------------------
+  // Perform Measurements
+  // ------------------------------
+  if(loopCounter == 4 || tempAlert || loopCounter == 255){
+    if(localization == GPS){
+      readGPS(&dev_xm1110, &xmdata, payload);
+      data[5] = payload[0];
+      data[6] = payload[1];
+      data[7] = payload[2];
+      data[8] = payload[3];
+      data[9] = payload[4];
+      data[10] = payload[5];
+      data[11] = payload[6];
+      data[12] = payload[7];
+    }
+
+    // ------------------------------
+    // Transmit Data
+    // ------------------------------
+    if(localization == GPS){
+      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 13, &data[0], ALP_ITF_ID_LORAWAN_ABP, &lorawan_session_config);
+      uint32_t duration_usec = xtimer_now_usec() - start;
+      printf("Command completed in %li ms\n", duration_usec / 1000);
+      if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
+        printf("Command completed successfully\n");
+      } else if(status == MODEM_STATUS_COMMAND_COMPLETED_ERROR) {
+        printf("Command completed with error\n");
+      } else if(status == MODEM_STATUS_COMMAND_TIMEOUT) {
+        printf("Command timed out\n");
+      }
+    } else {
+      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 5, &data[0], ALP_ITF_ID_D7ASP, &d7_session_config);
+      uint32_t duration_usec = xtimer_now_usec() - start;
+      printf("Command completed in %li ms\n", duration_usec / 1000);
+      if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
+        printf("Command completed successfully\n");
+      } else if(status == MODEM_STATUS_COMMAND_COMPLETED_ERROR) {
+        printf("Command completed with error\n");
+      } else if(status == MODEM_STATUS_COMMAND_TIMEOUT) {
+        printf("Command timed out\n");
+      }
+    }
+  }
+}
+
+void cb_lsm303agr(void *arg)
+{
+    if (arg != NULL) {
+    }
+
+    printf("Fall Detected\n");
+    measurementLoop(255);
+}
+
+void Configure_Interrupt_lsm303agr(void) {
+    gpio_init_int(GPIO_PIN(PORT_B, 13),GPIO_IN,GPIO_RISING, cb_lsm303agr, (void*) 0); //INT_1 from lsm303agr
+    gpio_irq_enable(GPIO_PIN(PORT_B, 13));
+}
+
 int main(void)
 {
   printf("+------------Initializing------------+\n");
   // ------------------------------
   // Initialize SHT3x
-  // ------------------------------
-  sht3x_dev_t dev;
-  init_sht3x(&dev); 
-
-  // ------------------------------
   // Initialize LSM303AGR
-  // ------------------------------
-  LSM303AGR_t lsm;
-  init_lsm303agr(&lsm, 35);
-  Configure_Interrupt_lsm303agr();
-
-  // ------------------------------
   // Initialize GPS
   // ------------------------------
-  xm1110_t dev_xm1110;
+  init_sht3x(&dev_sht3x); 
+  init_lsm303agr(&lsm, 1);
+  Configure_Interrupt_lsm303agr();
   int res;
-
   if ((res = xm1110_init(&dev_xm1110, &xm1110_params[0])) != XM1110_OK) {
       puts("GPS:Initialization failed\n");
       return XM1110_NO_DEV;
@@ -166,18 +259,10 @@ int main(void)
       puts("GPS:Initialization successful\n");
   }
 
-  xm1110_data_t xmdata;
-
-  // float test_float1 = 51.163977;
-  // float test_float2 = 37.413983;
-
-  uint8_t payload[8];
 
   // ------------------------------
-  // LoRa / D7 example
+  // LoRa / D7 initialization
   // ------------------------------
-    puts("Welcome to RIOT!");
-
     modem_callbacks_t modem_callbacks = {
       .command_completed_callback = &on_modem_command_completed_callback,
       .return_file_data_callback = &on_modem_return_file_data_callback,
@@ -191,69 +276,22 @@ int main(void)
     printf("modem UID: %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
 
     xtimer_ticks32_t last_wakeup = xtimer_now();
-    alp_itf_id_t current_interface_id = ALP_ITF_ID_D7ASP;
-    void* current_interface_config = (void*)&d7_session_config;
-    uint8_t counter = 0;
-    uint8_t data[4];
-    while(1) {
+    uint8_t loopCounter = 0;
       // ------------------------------
-      // Change communication protocol
+      // Main loop
       // ------------------------------
-      // counter = 1; // only use dash-7
-      uint32_t start = xtimer_now_usec();
-      if(counter % 5 == 0) {
-        printf("\n");
-        if(current_interface_id == ALP_ITF_ID_D7ASP) {
-          printf("Switching to LoRaWAN\n");
-          current_interface_id = ALP_ITF_ID_LORAWAN_ABP;
-          current_interface_config = &lorawan_session_config;
-        } else {
-          //printf("Switching to D7AP\n");
-          //current_interface_id = ALP_ITF_ID_D7ASP;
-          //current_interface_config = &d7_session_config;
-        }
-      }
-      // counter = 1; // only use lora
-
-      // ------------------------------
-      // Perform Measurements
-      // ------------------------------
-      int16_t temp;
-      int16_t hum;
-      read_sht3x(&dev, &temp, &hum);
-      data[0] = temp & 0xFF;
-      data[1] = temp >> 8;
-      data[2] = hum & 0xFF;
-      data[3] = hum >> 8;
-
-      // ------------------------------
-      // Perform GPS Measurement
-      // ------------------------------
-      readGPS(&dev_xm1110, &xmdata, payload);
-      printf("\nGPS Payload: [%i, %i, %i, %i, %i, %i, %i, %i]", payload[0], payload[1], payload[2], payload[3], payload[4], payload[5], payload[6], payload[7]);
-
-      // ------------------------------
-      // Transmit Data
-      // ------------------------------
-      //while(true) { //this loop is for testing
-      printf("Sending msg with data [ %i, %i, %i, %i ]\n", data[0], data[1], data[2], data[3]);
-      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 4, &data[0], current_interface_id, current_interface_config);
-      uint32_t duration_usec = xtimer_now_usec() - start;
-      printf("Command completed in %li ms\n", duration_usec / 1000);
-      if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
-        printf("Command completed successfully\n");
-      } else if(status == MODEM_STATUS_COMMAND_COMPLETED_ERROR) {
-        printf("Command completed with error\n");
-      } else if(status == MODEM_STATUS_COMMAND_TIMEOUT) {
-        printf("Command timed out\n");
-      }
-
-      counter++;
-      xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
-      printf("slept until %" PRIu32 "\n", xtimer_usec_from_ticks(xtimer_now()));
-      printf("------------------------------\n");
     
+    while(1) {
+      start = xtimer_now_usec();
+      measurementLoop(loopCounter);
+      loopCounter++;
+      if(loopCounter == 5){
+        loopCounter = 0;
+      }
+      xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
     }
-
-    return 0;
+  return 0;
 }
+
+
+
