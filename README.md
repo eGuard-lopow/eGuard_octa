@@ -2,8 +2,8 @@
 Low power project
 
 Hardware requirements:
-	- Mount the Murata modem shield on P1
-	- Mount the GPS shield on P2
+- Mount the Murata modem shield on P1
+- Mount the GPS shield on P2
 
 ## Configure
 - Add your device's ABP keys to `template_keys.h` and rename this file to `keys.h`
