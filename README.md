@@ -10,5 +10,5 @@ Low power project
 	- Move the .h files in `drivers/include/` to `RIOTBASE/drivers/include/`
 	- Move the .c files in `drivers/drivers/` to `RIOTBASE/drivers/DRIVERX/`
 		with DRIVERX being the name of the corresponding driver
-	- Move the param files in `drivers/drivers/` to `RIOTBASE/drivers/DRIVERX/include/`
+	- Move the params/internal files in `drivers/drivers/` to `RIOTBASE/drivers/DRIVERX/include/`
 		with DRIVERX being the name of the corresponding driver
