@@ -264,9 +264,29 @@ void cb_lsm303agr(void *arg)
     measurementLoop(255);
 }
 
+void cb_btn1(void *arg)
+{
+    if (arg != NULL) {
+    }
+
+    
+    if(localization == GPS){
+      printf("Switching to Fingerprinting\n");
+      localization = FINGERPRINTING;
+    } else {
+      printf("Switching to GPS\n");
+      localization = GPS;
+    }
+}
+
 void Configure_Interrupt_lsm303agr(void) {
     gpio_init_int(GPIO_PIN(PORT_B, 13),GPIO_IN,GPIO_RISING, cb_lsm303agr, (void*) 0); //INT_1 from lsm303agr
     gpio_irq_enable(GPIO_PIN(PORT_B, 13));
+}
+
+void Configure_Interrupt_btn1(void) {
+    gpio_init_int(GPIO_PIN(PORT_G, 0),GPIO_IN,GPIO_RISING, cb_btn1, (void*) 0); 
+    gpio_irq_enable(GPIO_PIN(PORT_G, 0));
 }
 
 int main(void)
@@ -281,6 +301,7 @@ int main(void)
   init_sht3x(&dev_sht3x); 
   init_lsm303agr(&lsm, 1);
   Configure_Interrupt_lsm303agr();
+  Configure_Interrupt_btn1();
   int res;
   if ((res = xm1110_init(&dev_xm1110, &xm1110_params[0])) != XM1110_OK) {
       puts("GPS: Initialization failed\n");
