@@ -8,9 +8,9 @@ int init_lsm303agr(LSM303AGR_t* dev, int cm)
     res += LSM303AGR_enable(dev);
     res += LSM303AGR_enable_interrupt(dev, cm);
     if (res == 0){
-        puts("Initialized LSM303AGR\n"); //should initialize using 2 options: unrespectfull: 10Hz, 0x02 duration, 40cm; 10Hz, 0x03 duration, 90cm
+        puts("LSM303AGR: Initialization successful\n"); //should initialize using 2 options: unrespectfull: 10Hz, 0x02 duration, 40cm; 10Hz, 0x03 duration, 90cm
     } else {
-        puts("Initializing LSM303AGR FAILED");
+        puts("LSM303AGR: Initialization failed\n");
     }
     return 0;
 }

@@ -6,12 +6,12 @@ int res;
 int init_sht3x(sht3x_dev_t* dev)
 {   
     if ((res = sht3x_init(dev, &sht3x_params[0])) != SHT3X_OK) {
-        puts("Initialization failed\n");
+        puts("SHT3X: Initialization failed\n");
         printf("res = %d\n",res);
         return 1;
     }
     else {
-        puts("Initialization SHT3X successful\n");
+        puts("SHT3X: Initialization successful\n");
     }
     return 0;
 }

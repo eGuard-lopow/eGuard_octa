@@ -37,9 +37,11 @@ bool tempAlert;
 uint32_t start;
 sht3x_dev_t dev_sht3x;
 LSM303AGR_t lsm;
+tcs34725_t dev_tcs;
 xm1110_t dev_xm1110;
+tcs34725_data_t data_tcs;
 xm1110_data_t xmdata;
-uint8_t payload[8];
+uint8_t payload[16];
 
 void on_modem_command_completed_callback(bool with_error)
 {
@@ -152,6 +154,30 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   payload[7] = (longitude_int & 0x000000FF);
 }
 
+void readLightSensor(tcs34725_t* dev_tcs, tcs34725_data_t* data_tcs, uint8_t* payload) {
+  tcs34725_read(dev_tcs, data_tcs);
+  printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
+      data_tcs->red, data_tcs->green, data_tcs->blue, data_tcs->clear);
+  printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
+      data_tcs->ct, data_tcs->lux, dev_tcs->again, dev_tcs->p.atime);
+  payload[0] = (data_tcs->red & 0xFF000000) >> 24;
+  payload[1] = (data_tcs->red & 0x00FF0000) >> 16;
+  payload[2] = (data_tcs->red & 0x0000FF00) >> 8;
+  payload[3] = (data_tcs->red & 0x000000FF);
+  payload[4] = (data_tcs->green & 0xFF000000) >> 24;
+  payload[5] = (data_tcs->green & 0x00FF0000) >> 16;
+  payload[6] = (data_tcs->green & 0x0000FF00) >> 8;
+  payload[7] = (data_tcs->green & 0x000000FF);
+  payload[8] = (data_tcs->blue & 0xFF000000) >> 24;
+  payload[9] = (data_tcs->blue & 0x00FF0000) >> 16;
+  payload[10] = (data_tcs->blue & 0x0000FF00) >> 8;
+  payload[11] = (data_tcs->blue & 0x000000FF);
+  payload[12] = (data_tcs->clear & 0xFF000000) >> 24;
+  payload[13] = (data_tcs->clear & 0x00FF0000) >> 16;
+  payload[14] = (data_tcs->clear & 0x0000FF00) >> 8;
+  payload[15] = (data_tcs->clear & 0x000000FF);
+}
+
 
 
 void measurementLoop(int loopCounter){
@@ -186,6 +212,8 @@ void measurementLoop(int loopCounter){
   // Perform Measurements
   // ------------------------------
   if(loopCounter == 4 || tempAlert || loopCounter == 255){
+    readLightSensor(&dev_tcs, &data_tcs, payload);
+    //add payload to data to send here
     if(localization == GPS){
       readGPS(&dev_xm1110, &xmdata, payload);
       data[5] = payload[0];
@@ -236,27 +264,6 @@ void cb_lsm303agr(void *arg)
     measurementLoop(255);
 }
 
-void examplelightsensor(void) {
-  tcs34725_t dev_tcs;
-  tcs34725_data_t data_tcs;
-
-  puts("TCS34725 RGBC Data; Sensor driver test application\r\n");
-  printf("Initializing first configured TCS34725 sensor...\r\n");
-
-  if (tcs34725_init(&dev_tcs, &tcs34725_params[0]) == TCS34725_OK) {
-    puts("[OK]\r\n");
-  }
-  else {
-    puts("[Failed]\r\n");
-  }
-
-  tcs34725_read(&dev_tcs, &data_tcs);
-  printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
-      data_tcs.red, data_tcs.green, data_tcs.blue, data_tcs.clear);
-  printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
-      data_tcs.ct, data_tcs.lux, dev_tcs.again, dev_tcs.p.atime);
-}
-
 void Configure_Interrupt_lsm303agr(void) {
     gpio_init_int(GPIO_PIN(PORT_B, 13),GPIO_IN,GPIO_RISING, cb_lsm303agr, (void*) 0); //INT_1 from lsm303agr
     gpio_irq_enable(GPIO_PIN(PORT_B, 13));
@@ -269,17 +276,24 @@ int main(void)
   // Initialize SHT3x
   // Initialize LSM303AGR
   // Initialize GPS
+  // Initialize Light Sensor
   // ------------------------------
   init_sht3x(&dev_sht3x); 
   init_lsm303agr(&lsm, 1);
   Configure_Interrupt_lsm303agr();
   int res;
   if ((res = xm1110_init(&dev_xm1110, &xm1110_params[0])) != XM1110_OK) {
-      puts("GPS:Initialization failed\n");
+      puts("GPS: Initialization failed\n");
       return XM1110_NO_DEV;
   }
   else {
-      puts("GPS:Initialization successful\n");
+      puts("GPS: Initialization successful\n");
+  }
+  if (tcs34725_init(&dev_tcs, &tcs34725_params[0]) == TCS34725_OK) {
+    puts("Light sensor: Initialization succesful\n");
+  }
+  else {
+    puts("Light sensor: Initialization failed\n");
   }
 
 
