@@ -34,6 +34,7 @@ uint8_t data[14];
 int16_t temp;
 int16_t hum;
 bool tempAlert;
+bool buttonOverride = false;
 uint32_t start;
 sht3x_dev_t dev_sht3x;
 LSM303AGR_t lsm;
@@ -42,6 +43,8 @@ xm1110_t dev_xm1110;
 tcs34725_data_t data_tcs;
 xm1110_data_t xmdata;
 uint8_t payload[8];
+xtimer_ticks32_t last_wakeup;
+uint8_t loopCounter;
 
 void on_modem_command_completed_callback(bool with_error)
 {
@@ -193,7 +196,7 @@ void measurementLoop(int loopCounter){
   data[3] = hum & 0xFF;
   data[4] = hum >> 8;
   if(loopCounter == 255){
-    data[0] = data[0] | 3;
+    data[0] = data[0] | 0b11;
     printf("FALL ALLERT\n");
   }
   if(temp / 100 > 29){
@@ -229,6 +232,18 @@ void measurementLoop(int loopCounter){
     // ------------------------------
     // Transmit Data
     // ------------------------------
+    if(!buttonOverride){
+      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 1, &data[0], ALP_ITF_ID_D7ASP, &d7_session_config);
+      if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
+        printf("Poll packet received, using fingerprinting\n");
+        localization = FINGERPRINTING;
+      } else {
+        printf("Poll packet failed, using GPS\n");
+        localization = GPS;
+      }
+    }
+
+
     if(localization == GPS){
       modem_status_t status = modem_send_unsolicited_response(0x40, 0, 14, &data[0], ALP_ITF_ID_LORAWAN_ABP, &lorawan_session_config);
       uint32_t duration_usec = xtimer_now_usec() - start;
@@ -261,7 +276,10 @@ void cb_lsm303agr(void *arg)
   }
 
   printf("Fall Detected\n");
-  measurementLoop(255);
+  //last_wakeup = xtimer_now();
+  loopCounter = 255;
+  //xtimer_periodic_wakeup(&last_wakeup, 1U * US_PER_SEC);
+  //measurementLoop(255);
 }
 
 void cb_btn1(void *arg)
@@ -333,14 +351,16 @@ int main(void)
   modem_read_file(D7A_FILE_UID_FILE_ID, 0, D7A_FILE_UID_SIZE, uid);
   printf("modem UID: %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
 
-  xtimer_ticks32_t last_wakeup = xtimer_now();
-  uint8_t loopCounter = 0;
+  last_wakeup = xtimer_now();
+  loopCounter = 0;
   // ------------------------------
   // Main loop
   // ------------------------------
     
     
   while(1) {
+    printf("MAIN LOOP");
+    last_wakeup = xtimer_now();
     start = xtimer_now_usec();
     measurementLoop(loopCounter);
     loopCounter++;
