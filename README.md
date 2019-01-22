@@ -19,7 +19,7 @@ Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
 - Octa connect Murata modem shield
 - Octa connnect GPS shield
 
-![Imgur: The magic of the Internet](https://imgur.com/fKzjctM)
+![Imgur](https://i.imgur.com/fKzjctM.jpg)
 
 
 ## 3. Setup
