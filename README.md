@@ -8,8 +8,11 @@ While programming, we paid attention to the low power aspect which is needed in 
 ## 1. Information
 
 University of Antwerp
+
 Course: I-IoT Low Power Embedded Systems
+
 Professsor/teacher: Maarten Weyn, Michiel Aernouts, Mats De Meyer
+
 Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
 
 ## 2. Hardware
