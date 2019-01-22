@@ -1,5 +1,5 @@
 # eGuard_octa
----
+
 ## About
 The eGuard is a device which tracks the health of an electronic device by using sensors like an accelerometer, a light sensor, a temperature and humidity sensor, ...
 
@@ -25,14 +25,14 @@ Title: Workflow
 ```
 
 ## 1. Information
----
+
 University of Antwerp
 Course: I-IoT Low Power Embedded Systems
 Professsor/teacher: Maarten Weyn, Michiel Aernouts, Mats De Meyer
 Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
 
 ## 2. Hardware
----
+
 - Nucleo L496ZG
 - Octa connect shield
 - Octa connect Murata modem shield
@@ -42,7 +42,7 @@ Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
 
 
 ## 3. Setup
----
+
 ### 3.1 Hardware
 
 - Octa Board
