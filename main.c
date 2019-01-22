@@ -115,9 +115,9 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
 
       switch (minmea_sentence_id(token2, false)) {
         case MINMEA_SENTENCE_RMC: { //$GNRMC
-          printf("\nGPS:   *Zin*:  %s\n",token2);
+          // printf("\nGPS:   *Zin*:  %s\n",token2);
   
-          puts("GPS: START");
+          // puts("GPS: START");
           if (minmea_parse_rmc(&frame, token2)) {
             printf("$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
                   minmea_tocoord(&frame.latitude),
@@ -125,11 +125,11 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
                   minmea_tofloat(&frame.speed));
             latitude_float = minmea_tofloat(&frame.latitude);
             longitude_float = minmea_tofloat(&frame.longitude);
-            printf("Latitude: %f", latitude_float);
-            printf("Longitude: %f", longitude_float);
+            // printf("Latitude: %f\n", latitude_float);
+            // printf("Longitude: %f\n", longitude_float);
           }
           free(token2);
-          puts("GPS: STOP");
+          // puts("GPS: STOP");
         } break;
 
         default: {
