@@ -101,11 +101,8 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   // Read GPS coordinates and store them in payload
   for(int i = 0; i<5; i++) {
     res = xm1110_read(dev, xmdata);
-    if ( res == 0 ) {
-      for(int i = 0;i<255;i++){
-        xmdata->data[i] = xmdata->data[i]%256;
-        printf("%c", xmdata->data[i]);
-      }
+    if ( res != 0 ) {
+      printf("GPS result != 0, something failed?");
     }
 
     token = strtok (xmdata->data,"\n");
@@ -195,14 +192,19 @@ void measurementLoop(int loopCounter){
   data[2] = temp >> 8;
   data[3] = hum & 0xFF;
   data[4] = hum >> 8;
+  if(loopCounter == 255){
+    data[0] = data[0] | 3;
+    printf("FALL ALLERT\n");
+  }
   if(temp / 100 > 29){
     tempAlert = true;
     data[0] = data[0] | 5; 
     printf("TEMP ALERT\n");
   }
-  if(loopCounter == 255){
-    data[0] = data[0] | 3;
-    printf("FALL ALLERT\n");
+  if(hum / 100 > 29){
+    tempAlert = true;
+    data[0] = data[0] | 9; 
+    printf("HUM ALERT\n");
   }
     
   // ------------------------------
@@ -288,6 +290,7 @@ void Configure_Interrupt_btn1(void) {
 
 int main(void)
 {
+  
   printf("+------------Initializing------------+\n");
   // ------------------------------
   // Initialize SHT3x
