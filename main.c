@@ -92,13 +92,12 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   char* token;
   struct minmea_sentence_rmc frame;
 
-  float latitude_float = 0.0;
-  float longitude_float = 0.0;
-
-  uint32_t latitude_int;
-  uint32_t longitude_int;
+  uint32_t latitude_int = 0;
+  uint32_t longitude_int = 0;
 
   int res = 0;
+  // char* test = "$GNRMC,105824.000,A,5110.577055,N,00420.844651,E,0.42,285.58,080119,,,A*73";
+
 
 
   // Read GPS coordinates and store them in payload
@@ -108,6 +107,7 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
       printf("GPS result != 0, something failed?");
     }
 
+    
     token = strtok (xmdata->data,"\n");
     while (token != NULL) {
       char *token2 = (char *) calloc(strlen(token),sizeof(char));
@@ -118,15 +118,15 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
           // printf("\nGPS:   *Zin*:  %s\n",token2);
   
           // puts("GPS: START");
+
           if (minmea_parse_rmc(&frame, token2)) {
-            printf("\n$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
-                  minmea_tocoord(&frame.latitude),
-                  minmea_tocoord(&frame.longitude),
-                  minmea_tofloat(&frame.speed));
-            latitude_float = minmea_tofloat(&frame.latitude);
-            longitude_float = minmea_tofloat(&frame.longitude);
-            // printf("Latitude: %f\n", latitude_float);
-            // printf("Longitude: %f\n", longitude_float);
+            printf("$RMC fixed-point coordinates and speed scaled to three decimal places: (%ld,%ld) %ld\n",
+                    minmea_rescale(&frame.latitude, 100000),
+                    minmea_rescale(&frame.longitude, 100000),
+                    minmea_rescale(&frame.speed, 1000));
+
+            latitude_int = minmea_rescale(&frame.latitude, 100000);
+            longitude_int = minmea_rescale(&frame.latitude, 100000);
           }
           free(token2);
           // puts("GPS: STOP");
@@ -146,8 +146,8 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   // latitude_int = (uint32_t)(test_float1*1000000);
   // longitude_int = (uint32_t)(test_float2*1000000);
   
-  latitude_int = (uint32_t)(latitude_float*1000000);
-  longitude_int = (uint32_t)(longitude_float*1000000);
+  // latitude_int = (uint32_t)(latitude_float*1000000);
+  // longitude_int = (uint32_t)(longitude_float*1000000);
 
   payload[0] = (latitude_int & 0xFF000000) >> 24;
   payload[1] = (latitude_int & 0x00FF0000) >> 16;
@@ -215,7 +215,7 @@ void measurementLoop(int loopCounter){
   // ------------------------------
   // Perform Measurements
   // ------------------------------
-  if(loopCounter == 4 || tempAlert || loopCounter == 255){
+  if(loopCounter == 0 || loopCounter == 1 || loopCounter == 2 || loopCounter == 3 || loopCounter == 4 || tempAlert || loopCounter == 255){
     readLightSensor(&dev_tcs, &data_tcs, payload);
     //add payload to data to send here
     data[5] = payload[0];
