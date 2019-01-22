@@ -121,12 +121,12 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
 
           if (minmea_parse_rmc(&frame, token2)) {
             printf("$RMC fixed-point coordinates and speed scaled to three decimal places: (%ld,%ld) %ld\n",
-                    minmea_rescale(&frame.latitude, 100000),
-                    minmea_rescale(&frame.longitude, 100000),
-                    minmea_rescale(&frame.speed, 1000));
+                    frame.latitude.value,
+                    frame.longitude,
+                    frame.speed;
 
-            latitude_int = minmea_rescale(&frame.latitude, 100000);
-            longitude_int = minmea_rescale(&frame.latitude, 100000);
+            latitude_int = frame.latitude;
+            longitude_int = frame.latitude;
           }
           free(token2);
           // puts("GPS: STOP");
