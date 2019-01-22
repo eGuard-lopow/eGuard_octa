@@ -34,7 +34,7 @@ uint8_t data[14];
 int16_t temp;
 int16_t hum;
 bool tempAlert;
-bool buttonOverride = false;
+bool buttonOverride = true;
 uint32_t start;
 sht3x_dev_t dev_sht3x;
 LSM303AGR_t lsm;
@@ -276,10 +276,8 @@ void cb_lsm303agr(void *arg)
   }
 
   printf("Fall Detected\n");
-  //last_wakeup = xtimer_now();
   loopCounter = 255;
   //xtimer_periodic_wakeup(&last_wakeup, 1U * US_PER_SEC);
-  //measurementLoop(255);
 }
 
 void cb_btn1(void *arg)
@@ -359,7 +357,7 @@ int main(void)
     
     
   while(1) {
-    printf("MAIN LOOP");
+    printf("MAIN LOOP\n");
     last_wakeup = xtimer_now();
     start = xtimer_now_usec();
     measurementLoop(loopCounter);
@@ -368,6 +366,8 @@ int main(void)
       loopCounter = 0;
     }
     xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
+    printf("WOKEN UP\n");
+
   }
   return 0;
 }
