@@ -22,9 +22,11 @@ Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
 ![Imgur](https://i.imgur.com/fKzjctM.jpg)
 
 
-## 3. Setup
+## Setup
 
-### 3.1 Hardware
+![Imgur](https://i.imgur.com/FLzhBzQ.png)
+
+### Hardware
 
 - Octa Board
   - Mount the Murata modem shield on P1
@@ -37,10 +39,10 @@ Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
   - The Things Network
   - Thingsboard
 
-### 3.2 Configure
+### Configure
 - Add your device's ABP keys to `template_keys.h` and rename this file to `keys.h`
 
-### 3.3 Drivers
+### Drivers
 - This repository uses modified drivers. To install these correctly place the 
 	following files in the correct folders:
 	- Move the .h files in `drivers/include/` to `RIOTBASE/drivers/include/`
@@ -78,7 +80,7 @@ endif
 ```
 
 - Edit the `RIOTBASE/boards/octa/include/periph_conf.h` file en replace the I2C-config with the following:
-```cpp
+```
 static const i2c_conf_t i2c_config[] = {
     {
         .dev            = I2C1,
