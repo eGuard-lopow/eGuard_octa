@@ -5,25 +5,6 @@ The eGuard is a device which tracks the health of an electronic device by using 
 
 While programming, we paid attention to the low power aspect which is needed in the world of IoT to let devices run several years on a single battery.
 
-```sequence
-Title: Workflow
-
-1 -> 2: Drivers
-2 -> 3: ISR
-3 -> 4: Power Management
-4 -> 5: Main Function
-
-
-1 -> 2: TTN and TB
-2 -> 3: Database
-3 -> 4: Fingerprinting
-4 -> 5: Final Setup
-
-1 -> 3: GPS I2C
-2 -> 4: GPS Parse
-4 -> 5: GPS Send
-```
-
 ## 1. Information
 
 University of Antwerp
