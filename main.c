@@ -119,7 +119,7 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   
           // puts("GPS: START");
           if (minmea_parse_rmc(&frame, token2)) {
-            printf("$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
+            printf("\n$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
                   minmea_tocoord(&frame.latitude),
                   minmea_tocoord(&frame.longitude),
                   minmea_tofloat(&frame.speed));
