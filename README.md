@@ -22,7 +22,7 @@ If the eGuard is inside (determined with DASH7 connection), it will use DASH7 to
 
 > In the current version, the switch between DASH7 vs. LoRaWAN and GPS is done by pressing `BTN1` to illustrate the operation.
 
-## Hardware
+### Hardware eGuard
 
 - Nucleo L496ZG
 - Octa connect shield
@@ -31,7 +31,7 @@ If the eGuard is inside (determined with DASH7 connection), it will use DASH7 to
 
 ![Imgur](https://i.imgur.com/fKzjctM.jpg)
 
-- Backend
+### Backend
   - MongoDB
   - Fingerprinting
   - MQTT broker
@@ -39,7 +39,7 @@ If the eGuard is inside (determined with DASH7 connection), it will use DASH7 to
   - Thingsboard
   - Telegram Push Notifications
 
-![Imgur](https://i.imgur.com/FLzhBzQ.png)
+![Imgur](https://i.imgur.com/5m04SeV.png)
 
 ## Deploy
 
@@ -89,6 +89,7 @@ ifneq (,$(filter tcs34725,$(USEMODULE)))
 endif
 ```
 
+### I2C configuration
 - Edit the `RIOTBASE/boards/octa/include/periph_conf.h` file en replace the I2C-config with the following:
 ```cpp
 static const i2c_conf_t i2c_config[] = {
@@ -116,3 +117,48 @@ static const i2c_conf_t i2c_config[] = {
     }
 };
 ```
+
+## Components/Techniques
+
+### GPS
+
+The global (outdoor) position of the eGuard is determined by two variables; latitude and longitude. These variables present the position on the earth.
+
+GPS data is presented in NMEA data. NMEA data can have different formats for different kinds of data. Basically, it consists of structured characters. Data is kept in the buffer (255 bytes) of the GPS module. We can read the data from the buffer sequentially through I2C.
+
+When data is retrieved, it can be parsed to obtain the coordinates. We will use [minmea](https://github.com/kosma/minmea) because it was already integrated in RIOT OS. We chose to parse NMEA data in the RMC format (Recommended Minimum Data for gps), which looks like the following.
+
+`$GNRMC,105824.000,A,5110.577055,N,00420.844651,E,0.42,285.58,080119,,,A*73`
+
+We discard all the other NMEA data.
+
+The data fiels are seperated using a comma. These are the fields:
+- 1st field defines the format
+- 2nd field defines the time the fix is taken (UTC time)
+- 3rd field defines the status (Active or Void)
+- 4th field defines latitude
+- 5th field defines longitude
+- 6th fiels defines speed (knots)
+- 7th field defines track angle
+- 8th field defines the date
+- 9th field defines th magnetic variation in degrees
+- 10th field defines the checksum data, always begins with *
+
+After reading through I2C and parsing the data, we send the latitude and longitude via LoRaWAN to the backend.
+
+### Fingerprinting
+
+## Power Measurement
+
+## Division Of Labour
+
+Thomas
+- Drivers sensors
+- ISR
+- Power Measuring
+
+Robin
+- Backend
+
+Toon
+- GPS
