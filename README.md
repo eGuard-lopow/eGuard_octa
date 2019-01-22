@@ -5,7 +5,7 @@ The eGuard is a device which tracks the health of an electronic device by using 
 
 While programming, we paid attention to the low power aspect which is needed in the world of IoT to let devices run several years on a single battery.
 
-## 1. Information
+## Information
 
 University of Antwerp
 
@@ -15,7 +15,14 @@ Professsor/teacher: Maarten Weyn, Michiel Aernouts, Mats De Meyer
 
 Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
 
-## 2. Hardware
+
+## Setup
+
+If the eGuard is inside (determined with DASH7 connection), it will use DASH7 to communicate and fingerprinting to locate itself in the class room. When outside, the eGuard will automatically switch to LoRaWAN to communicate with the backend and use the GPS module to locate itself.
+
+> In the current version, the switch between DASH7 vs. LoRaWAN and GPS is done by pressing `BTN1` to illustrate the operation.
+
+## Hardware
 
 - Nucleo L496ZG
 - Octa connect shield
@@ -24,10 +31,17 @@ Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
 
 ![Imgur](https://i.imgur.com/fKzjctM.jpg)
 
-
-## Setup
+- Backend
+  - MongoDB
+  - Fingerprinting
+  - MQTT broker
+  - The Things Network
+  - Thingsboard
+  - Telegram Push Notifications
 
 ![Imgur](https://i.imgur.com/FLzhBzQ.png)
+
+## Deploy
 
 ### Hardware
 
@@ -35,18 +49,11 @@ Master Students: Thomas Verellen, Robin Janssens, Toon De Keyzer
   - Mount the Murata modem shield on P1
   - Mount the GPS shield on P2
 
-- Backend
-  - MongoDB
-  - Fingerprinting
-  - MQTT broker
-  - The Things Network
-  - Thingsboard
-
-### Configure
+### Keys
 - Add your device's ABP keys to `template_keys.h` and rename this file to `keys.h`
 
 ### Drivers
-- This repository uses modified drivers. To install these correctly place the 
+- This repository uses newly made drivers. To install these, correctly place the 
 	following files in the correct folders:
 	- Move the .h files in `drivers/include/` to `RIOTBASE/drivers/include/`
 	- Move the folders with .c files in `drivers/drivers/` to `RIOTBASE/drivers/`
@@ -83,7 +90,7 @@ endif
 ```
 
 - Edit the `RIOTBASE/boards/octa/include/periph_conf.h` file en replace the I2C-config with the following:
-```
+```cpp
 static const i2c_conf_t i2c_config[] = {
     {
         .dev            = I2C1,
