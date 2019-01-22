@@ -154,10 +154,20 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   payload[2] = (latitude_int & 0x0000FF00) >> 8;
   payload[3] = (latitude_int & 0x000000FF);
 
+  printf("\n%d", payload[0]);
+  printf("\n%d", payload[1]);
+  printf("\n%d", payload[2]);
+  printf("\n%d", payload[3]);
+
   payload[4] = (longitude_int & 0xFF000000) >> 24;
   payload[5] = (longitude_int & 0x00FF0000) >> 16;
   payload[6] = (longitude_int & 0x0000FF00) >> 8;
   payload[7] = (longitude_int & 0x000000FF);
+
+  printf("\n%d", payload[4]);
+  printf("\n%d", payload[5]);
+  printf("\n%d", payload[6]);
+  printf("\n%d\n", payload[7]);
 }
 
 void readLightSensor(tcs34725_t* dev_tcs, tcs34725_data_t* data_tcs, uint8_t* payload) {
