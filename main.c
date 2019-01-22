@@ -121,12 +121,12 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
 
           if (minmea_parse_rmc(&frame, token2)) {
             printf("$RMC fixed-point coordinates and speed scaled to three decimal places: (%ld,%ld) %ld\n",
-                    frame.latitude.value,
-                    frame.longitude.value,
+                    minmea_rescale(&frame.latitude, 100000),
+                    minmea_rescale(&frame.longitude, 100000),
                     frame.speed.value);
 
-            latitude_int = frame.latitude.value;
-            longitude_int = frame.latitude.value;
+            latitude_int = minmea_rescale(&frame.latitude, 100000);
+            longitude_int = minmea_rescale(&frame.longitude, 100000);
           }
           free(token2);
           // puts("GPS: STOP");
@@ -142,32 +142,17 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
     }
   }
 
-  // Convert floats in bytes
-  // latitude_int = (uint32_t)(test_float1*1000000);
-  // longitude_int = (uint32_t)(test_float2*1000000);
-  
-  // latitude_int = (uint32_t)(latitude_float*1000000);
-  // longitude_int = (uint32_t)(longitude_float*1000000);
-
   payload[0] = (latitude_int & 0xFF000000) >> 24;
   payload[1] = (latitude_int & 0x00FF0000) >> 16;
   payload[2] = (latitude_int & 0x0000FF00) >> 8;
   payload[3] = (latitude_int & 0x000000FF);
-
-  printf("\n%d", payload[0]);
-  printf("\n%d", payload[1]);
-  printf("\n%d", payload[2]);
-  printf("\n%d", payload[3]);
 
   payload[4] = (longitude_int & 0xFF000000) >> 24;
   payload[5] = (longitude_int & 0x00FF0000) >> 16;
   payload[6] = (longitude_int & 0x0000FF00) >> 8;
   payload[7] = (longitude_int & 0x000000FF);
 
-  printf("\n%d", payload[4]);
-  printf("\n%d", payload[5]);
-  printf("\n%d", payload[6]);
-  printf("\n%d\n", payload[7]);
+
 }
 
 void readLightSensor(tcs34725_t* dev_tcs, tcs34725_data_t* data_tcs, uint8_t* payload) {
@@ -288,6 +273,7 @@ void cb_lsm303agr(void *arg)
   }
 
   printf("Fall Detected\n");
+  //measurementLoop(255);
   loopCounter = 255;
   //xtimer_periodic_wakeup(&last_wakeup, 1U * US_PER_SEC);
 }
