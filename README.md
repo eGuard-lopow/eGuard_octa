@@ -122,7 +122,7 @@ static const i2c_conf_t i2c_config[] = {
 
 ### GPS
 
-The global (outdoor) position of the eGuard is determined by two variables; latitude and longitude. These variables present the position on the earth.
+The global (outdoor) position of the eGuard is determined by two variables; latitude and longitude. These variables represent the position on the earth.
 
 GPS data is presented in NMEA data. NMEA data can have different formats for different kinds of data. Basically, it consists of structured characters. Data is kept in the buffer (255 bytes) of the GPS module. We can read the data from the buffer sequentially through I2C.
 
