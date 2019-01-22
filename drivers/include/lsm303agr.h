@@ -191,7 +191,7 @@ int LSM303AGR_read_mag(const LSM303AGR_t *dev, LSM303AGR_3d_data_t *data);
  */
 int LSM303AGR_read_temp(const LSM303AGR_t *dev, int16_t *value);
 
-int LSM303AGR_enable_interrupt(const LSM303AGR_t *dev);
+int LSM303AGR_enable_interrupt(const LSM303AGR_t *dev, int cm);
 int LSM303AGR_clear_int(const LSM303AGR_t *dev, int8_t *value);
 
 /**
