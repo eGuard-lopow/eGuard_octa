@@ -78,7 +78,7 @@ endif
 ```
 
 - Edit the `RIOTBASE/boards/octa/include/periph_conf.h` file en replace the I2C-config with the following:
-```
+```cpp
 static const i2c_conf_t i2c_config[] = {
     {
         .dev            = I2C1,
