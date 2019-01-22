@@ -30,7 +30,7 @@ An unsolicited message will be transmitted periodically using the DASH7 interfac
 #define INTERVAL (20U * US_PER_SEC)
 
 uint8_t localization = GPS;
-uint8_t data[13];
+uint8_t data[14];
 int16_t temp;
 int16_t hum;
 bool tempAlert;
@@ -41,7 +41,7 @@ tcs34725_t dev_tcs;
 xm1110_t dev_xm1110;
 tcs34725_data_t data_tcs;
 xm1110_data_t xmdata;
-uint8_t payload[16];
+uint8_t payload[8];
 
 void on_modem_command_completed_callback(bool with_error)
 {
@@ -110,12 +110,13 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
 
     token = strtok (xmdata->data,"\n");
     while (token != NULL) {
-      printf("\nGPS:   *Zin*:  %s\n",token);
-  
-      puts("GPS: START");
+    
 
       switch (minmea_sentence_id(token, false)) {
         case MINMEA_SENTENCE_RMC: { //$GNRMC
+          printf("\nGPS:   *Zin*:  %s\n",token);
+  
+          puts("GPS: START");
           if (minmea_parse_rmc(&frame, token)) {
             printf("$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
                   minmea_tocoord(&frame.latitude),
@@ -123,14 +124,17 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
                   minmea_tofloat(&frame.speed));
             latitude_float = minmea_tofloat(&frame.latitude);
             longitude_float = minmea_tofloat(&frame.longitude);
+            printf("Latitude: %f", latitude_float);
+            printf("Longitude: %f", longitude_float);
           }
+          puts("GPS: STOP");
         } break;
 
         default: {
           //do nothing
         }
       }
-      puts("GPS: STOP");
+    
       
       token = strtok (NULL, "\n");
     }
@@ -160,22 +164,15 @@ void readLightSensor(tcs34725_t* dev_tcs, tcs34725_data_t* data_tcs, uint8_t* pa
       data_tcs->red, data_tcs->green, data_tcs->blue, data_tcs->clear);
   printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
       data_tcs->ct, data_tcs->lux, dev_tcs->again, dev_tcs->p.atime);
-  payload[0] = (data_tcs->red & 0xFF000000) >> 24;
-  payload[1] = (data_tcs->red & 0x00FF0000) >> 16;
-  payload[2] = (data_tcs->red & 0x0000FF00) >> 8;
-  payload[3] = (data_tcs->red & 0x000000FF);
-  payload[4] = (data_tcs->green & 0xFF000000) >> 24;
-  payload[5] = (data_tcs->green & 0x00FF0000) >> 16;
-  payload[6] = (data_tcs->green & 0x0000FF00) >> 8;
-  payload[7] = (data_tcs->green & 0x000000FF);
-  payload[8] = (data_tcs->blue & 0xFF000000) >> 24;
-  payload[9] = (data_tcs->blue & 0x00FF0000) >> 16;
-  payload[10] = (data_tcs->blue & 0x0000FF00) >> 8;
-  payload[11] = (data_tcs->blue & 0x000000FF);
-  payload[12] = (data_tcs->clear & 0xFF000000) >> 24;
-  payload[13] = (data_tcs->clear & 0x00FF0000) >> 16;
-  payload[14] = (data_tcs->clear & 0x0000FF00) >> 8;
-  payload[15] = (data_tcs->clear & 0x000000FF);
+  payload[0] = (data_tcs->lux & 0xFF000000) >> 24;
+  payload[1] = (data_tcs->lux & 0x00FF0000) >> 16;
+  payload[2] = (data_tcs->lux & 0x0000FF00) >> 8;
+  payload[3] = (data_tcs->lux & 0x000000FF);
+
+  if(payload[1] != 0 || payload[2] != 0 || payload[3] != 0){
+    payload[0] = 255;
+  }
+  printf("Data to sent from light sensor: %d Lux", payload[0]);
 }
 
 
@@ -214,23 +211,24 @@ void measurementLoop(int loopCounter){
   if(loopCounter == 4 || tempAlert || loopCounter == 255){
     readLightSensor(&dev_tcs, &data_tcs, payload);
     //add payload to data to send here
+    data[5] = payload[0];
     if(localization == GPS){
       readGPS(&dev_xm1110, &xmdata, payload);
-      data[5] = payload[0];
-      data[6] = payload[1];
-      data[7] = payload[2];
-      data[8] = payload[3];
-      data[9] = payload[4];
-      data[10] = payload[5];
-      data[11] = payload[6];
-      data[12] = payload[7];
+      data[6] = payload[0];
+      data[7] = payload[1];
+      data[8] = payload[2];
+      data[9] = payload[3];
+      data[10] = payload[4];
+      data[11] = payload[5];
+      data[12] = payload[6];
+      data[13] = payload[7];
     }
 
     // ------------------------------
     // Transmit Data
     // ------------------------------
     if(localization == GPS){
-      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 13, &data[0], ALP_ITF_ID_LORAWAN_ABP, &lorawan_session_config);
+      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 14, &data[0], ALP_ITF_ID_LORAWAN_ABP, &lorawan_session_config);
       uint32_t duration_usec = xtimer_now_usec() - start;
       printf("Command completed in %li ms\n", duration_usec / 1000);
       if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
@@ -241,7 +239,7 @@ void measurementLoop(int loopCounter){
         printf("Command timed out\n");
       }
     } else {
-      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 5, &data[0], ALP_ITF_ID_D7ASP, &d7_session_config);
+      modem_status_t status = modem_send_unsolicited_response(0x40, 0, 6, &data[0], ALP_ITF_ID_D7ASP, &d7_session_config);
       uint32_t duration_usec = xtimer_now_usec() - start;
       printf("Command completed in %li ms\n", duration_usec / 1000);
       if(status == MODEM_STATUS_COMMAND_COMPLETED_SUCCESS) {
@@ -257,36 +255,35 @@ void measurementLoop(int loopCounter){
 
 void cb_lsm303agr(void *arg)
 {
-    if (arg != NULL) {
-    }
+  if (arg != NULL) {
+  }
 
-    printf("Fall Detected\n");
-    measurementLoop(255);
+  printf("Fall Detected\n");
+  measurementLoop(255);
 }
 
 void cb_btn1(void *arg)
 {
-    if (arg != NULL) {
-    }
+  if (arg != NULL) {
+  }
 
-    
-    if(localization == GPS){
-      printf("Switching to Fingerprinting\n");
-      localization = FINGERPRINTING;
-    } else {
-      printf("Switching to GPS\n");
-      localization = GPS;
-    }
+  if(localization == GPS){
+    printf("Switching to Fingerprinting\n");
+    localization = FINGERPRINTING;
+  } else {
+    printf("Switching to GPS\n");
+    localization = GPS;
+  }
 }
 
 void Configure_Interrupt_lsm303agr(void) {
-    gpio_init_int(GPIO_PIN(PORT_B, 13),GPIO_IN,GPIO_RISING, cb_lsm303agr, (void*) 0); //INT_1 from lsm303agr
-    gpio_irq_enable(GPIO_PIN(PORT_B, 13));
+  gpio_init_int(GPIO_PIN(PORT_B, 13),GPIO_IN,GPIO_RISING, cb_lsm303agr, (void*) 0); //INT_1 from lsm303agr
+  gpio_irq_enable(GPIO_PIN(PORT_B, 13));
 }
 
 void Configure_Interrupt_btn1(void) {
-    gpio_init_int(GPIO_PIN(PORT_G, 0),GPIO_IN,GPIO_RISING, cb_btn1, (void*) 0); 
-    gpio_irq_enable(GPIO_PIN(PORT_G, 0));
+  gpio_init_int(GPIO_PIN(PORT_G, 0),GPIO_IN,GPIO_RISING, cb_btn1, (void*) 0); 
+  gpio_irq_enable(GPIO_PIN(PORT_G, 0));
 }
 
 int main(void)
@@ -304,8 +301,8 @@ int main(void)
   Configure_Interrupt_btn1();
   int res;
   if ((res = xm1110_init(&dev_xm1110, &xm1110_params[0])) != XM1110_OK) {
-      puts("GPS: Initialization failed\n");
-      return XM1110_NO_DEV;
+    puts("GPS: Initialization failed\n");
+    return XM1110_NO_DEV;
   }
   else {
       puts("GPS: Initialization successful\n");
@@ -321,34 +318,34 @@ int main(void)
   // ------------------------------
   // LoRa / D7 initialization
   // ------------------------------
-    modem_callbacks_t modem_callbacks = {
-      .command_completed_callback = &on_modem_command_completed_callback,
-      .return_file_data_callback = &on_modem_return_file_data_callback,
-      .write_file_data_callback = &on_modem_write_file_data_callback,
-    };
+  modem_callbacks_t modem_callbacks = {
+    .command_completed_callback = &on_modem_command_completed_callback,
+    .return_file_data_callback = &on_modem_return_file_data_callback,
+    .write_file_data_callback = &on_modem_write_file_data_callback,
+  };
 
-    modem_init(UART_DEV(1), &modem_callbacks);
+  modem_init(UART_DEV(1), &modem_callbacks);
 
-    uint8_t uid[D7A_FILE_UID_SIZE];
-    modem_read_file(D7A_FILE_UID_FILE_ID, 0, D7A_FILE_UID_SIZE, uid);
-    printf("modem UID: %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
+  uint8_t uid[D7A_FILE_UID_SIZE];
+  modem_read_file(D7A_FILE_UID_FILE_ID, 0, D7A_FILE_UID_SIZE, uid);
+  printf("modem UID: %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
 
-    xtimer_ticks32_t last_wakeup = xtimer_now();
-    uint8_t loopCounter = 0;
-      // ------------------------------
-      // Main loop
-      // ------------------------------
+  xtimer_ticks32_t last_wakeup = xtimer_now();
+  uint8_t loopCounter = 0;
+  // ------------------------------
+  // Main loop
+  // ------------------------------
     
     
-    while(1) {
-      start = xtimer_now_usec();
-      measurementLoop(loopCounter);
-      loopCounter++;
-      if(loopCounter == 5){
-        loopCounter = 0;
-      }
-      xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
+  while(1) {
+    start = xtimer_now_usec();
+    measurementLoop(loopCounter);
+    loopCounter++;
+    if(loopCounter == 5){
+      loopCounter = 0;
     }
+    xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
+  }
   return 0;
 }
 
