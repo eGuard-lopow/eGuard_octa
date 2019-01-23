@@ -166,7 +166,7 @@ void readLightSensor(tcs34725_t* dev_tcs, tcs34725_data_t* data_tcs, uint8_t* pa
   payload[2] = (data_tcs->lux & 0x0000FF00) >> 8;
   payload[3] = (data_tcs->lux & 0x000000FF);
 
-  if(payload[1] != 0 || payload[2] != 0 || payload[3] != 0){
+  if(payload[0] != 0 || payload[1] != 0 || payload[2] != 0){
     payload[0] = 255;
   }
   printf("Data to sent from light sensor: %d Lux", payload[0]);
