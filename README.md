@@ -22,6 +22,11 @@ If the eGuard is inside (determined with DASH7 connection), it will use DASH7 to
 
 > In the current version, the switch between DASH7 vs. LoRaWAN and GPS is done by pressing `BTN1` to illustrate the operation.
 
+### Programming Environment
+
+- Vagrant
+- RIOT OS
+
 ### Hardware eGuard
 
 - Nucleo L496ZG (white)
@@ -54,7 +59,7 @@ If the eGuard is inside (determined with DASH7 connection), it will use DASH7 to
 
 ### Drivers
 - This repository uses newly made drivers. To install these, correctly place the 
-	following files in the correct folders:
+	following files in the corresponding folders:
 	- Move the .h files in `drivers/include/` to `RIOTBASE/drivers/include/`
 	- Move the folders with .c files in `drivers/drivers/` to `RIOTBASE/drivers/`
 
