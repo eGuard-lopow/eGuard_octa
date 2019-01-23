@@ -24,10 +24,10 @@ If the eGuard is inside (determined with DASH7 connection), it will use DASH7 to
 
 ### Hardware eGuard
 
-- Nucleo L496ZG
-- Octa connect shield
-- Octa connect Murata modem shield
-- Octa connnect GPS shield
+- Nucleo L496ZG (white)
+- Octa connect shield (black)
+- Octa connect Murata modem shield (blue)
+- Octa connnect GPS shield (green)
 
 ![Imgur](https://i.imgur.com/fKzjctM.jpg)
 
