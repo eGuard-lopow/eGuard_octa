@@ -115,7 +115,7 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
 
       switch (minmea_sentence_id(token2, false)) {
         case MINMEA_SENTENCE_RMC: { //$GNRMC
-          // printf("\nGPS:   *Zin*:  %s\n",token2);
+          printf("\nGPS:   *Zin*:  %s\n",token2);
   
           // puts("GPS: START");
 
@@ -210,7 +210,7 @@ void measurementLoop(int loopCounter){
   // ------------------------------
   // Perform Measurements
   // ------------------------------
-  if(loopCounter == 0 || loopCounter == 1 || loopCounter == 2 || loopCounter == 3 || loopCounter == 4 || tempAlert || loopCounter == 255){
+  if(loopCounter == 3 || tempAlert || loopCounter == 255){
     readLightSensor(&dev_tcs, &data_tcs, payload);
     //add payload to data to send here
     data[5] = payload[0];
@@ -273,9 +273,7 @@ void cb_lsm303agr(void *arg)
   }
 
   printf("Fall Detected\n");
-  //measurementLoop(255);
   loopCounter = 255;
-  //xtimer_periodic_wakeup(&last_wakeup, 1U * US_PER_SEC);
 }
 
 void cb_btn1(void *arg)
@@ -360,7 +358,7 @@ int main(void)
     start = xtimer_now_usec();
     measurementLoop(loopCounter);
     loopCounter++;
-    if(loopCounter == 5){
+    if(loopCounter == 4){
       loopCounter = 0;
     }
     xtimer_periodic_wakeup(&last_wakeup, INTERVAL);
