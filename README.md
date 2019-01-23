@@ -167,10 +167,10 @@ Support for the low power mode of the sensor has not been added since this is on
 
 The application was written with low power usage in mind. The different components were used in such a way that the least amount of power is required.
 
-- sht3x: Used in single shot mode, one measurement every 15 minutes.
-- lsm303agr: Used in 10Hz continous mode.
-- xm110: The GPS sensor is not yet optimized for low power use. It is continously operating.
-- Murata: The communication module automatically goes into idle mode when not in use. However, the used driver keeps the LED on at all times, generating a high idle current.
+- SHT3X: Used in single shot mode, one measurement every 15 minutes.
+- LSM303AGR: Used in 10Hz continous mode.
+- XM110: The GPS sensor is not yet optimized for low power use. It is continously operating.
+- MURATA: The communication module automatically goes into idle mode when not in use. However, the used driver keeps the LED on at all times, generating a high idle current.
 - STM32L496ZGT6P: The used board has no support for low power mode in RIOT OS yet.  
 		
 
