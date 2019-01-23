@@ -147,7 +147,7 @@ The data fiels are seperated using a comma. These are the fields:
 - 7th field defines track angle
 - 8th field defines the date
 - 9th field defines th magnetic variation in degrees
-- 10th field defines the checksum data, always begins with *
+- 10th field defines the checksum data, always begins with `*`
 
 After reading through I2C and parsing the data, we send the latitude and longitude via LoRaWAN to the backend.
 
