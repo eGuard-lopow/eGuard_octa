@@ -154,7 +154,7 @@ After reading through I2C and parsing the data, we send the latitude and longitu
 ### Temperature/humidity sensor
 
 The driver for the sht3x has been rewritten to support the integrated alarm mode. This makes it possible for the board to enter sleep mode and wake up by an interrupt driven by the temperature sensor. 
-However, this was not used in the final application sinces we periodically wake up the board every 15 minutes. This means that for our appplication it would require less power to use the sensor in single shot mode and manually check if certain temperature or humidity borders are crossed. 
+However, this was not used in the final application since we periodically wake up the board every 15 minutes. This means that for our appplication it would require less power to use the sensor in single shot mode and manually check if certain temperature or humidity borders are crossed. 
 
 ### Accelerometer
 
@@ -165,12 +165,20 @@ Support for the low power mode of the sensor has not been added since this is on
 
 ## Power Measurement
 
+The application was written with low power usage in mind. The different components were used in such a way that the least amount of power is required.
+
+- sht3x: Used in single shot mode, one measurement every 15 minutes.
+- lsm303agr: Used in 10Hz continous mode.
+- xm110: The GPS sensor is not yet optimized for low power use. It is continously operating.
+- Murata: The communication module automatically goes into idle mode when not in use. However, the used driver keeps the LED on at all times, generating a high idle current.
+- STM32L496ZGT6P: The used board has no support for low power mode in RIOT OS yet.  
+		
 
 
 ## Division Of Labour
 
 Thomas
-- Drivers sensors
+- Drivers sensors (sht3x/ lsm303agr)
 - ISR
 - Power Measuring
 
