@@ -58,7 +58,7 @@ If the eGuard is inside (determined with DASH7 connection), it will use DASH7 to
 - Add your device's ABP keys to `template_keys.h` and rename this file to `keys.h`
 
 ### Drivers
-- This repository uses newly made drivers. To install these, correctly place the 
+- This repository uses newly made drivers. To install these, correctly place the
 	following files in the corresponding folders:
 	- Move the .h files in `drivers/include/` to `RIOTBASE/drivers/include/`
 	- Move the folders with .c files in `drivers/drivers/` to `RIOTBASE/drivers/`
@@ -153,15 +153,17 @@ After reading through I2C and parsing the data, we send the latitude and longitu
 
 ### Temperature/humidity sensor
 
-The driver for the sht3x has been rewritten to support the integrated alarm mode. This makes it possible for the board to enter sleep mode and wake up by an interrupt driven by the temperature sensor. 
-However, this was not used in the final application since we periodically wake up the board every 15 minutes. This means that for our appplication it would require less power to use the sensor in single shot mode and manually check if certain temperature or humidity borders are crossed. 
+The driver for the sht3x has been rewritten to support the integrated alarm mode. This makes it possible for the board to enter sleep mode and wake up by an interrupt driven by the temperature sensor.
+However, this was not used in the final application since we periodically wake up the board every 15 minutes. This means that for our appplication it would require less power to use the sensor in single shot mode and manually check if certain temperature or humidity borders are crossed.
 
 ### Accelerometer
 
-The driver for the accelerometer is based on the already existing lsm303dlhc. Furthermore, support for the free fall detection has been added to detect falls from 10 cm, 40 cm or 90 cm. 
+The driver for the accelerometer is based on the already existing lsm303dlhc. Furthermore, support for the free fall detection has been added to detect falls from 10 cm, 40 cm or 90 cm.
 Support for the low power mode of the sensor has not been added since this is only of interest when using the lsm303agr on a frequency higher than 10Hz. 10Hz suffices for our application.
 
-### Fingerprinting
+### Indoor localization using Fingerprinting
+
+The firmware used to compose the fingerprint dataset can be found in the `training` branch. After a press on B1 it will send a predefined amount of messages on Dash-7 which can be collected on the backend.
 
 ## Power Measurement
 
@@ -172,7 +174,7 @@ The application was written with low power usage in mind. The different componen
 - XM110: The GPS sensor is not yet optimized for low power use. It is continously operating.
 - MURATA: The communication module automatically goes into idle mode when not in use. However, the used driver keeps the LED on at all times, generating a high idle current.
 - STM32L496ZGT6P: The used board has no support for low power mode in RIOT OS yet.  
-		
+
 
 
 ## Division Of Labour
@@ -184,6 +186,7 @@ Thomas
 
 Robin
 - Backend
+- Indoor Localization
 
 Toon
 - GPS
