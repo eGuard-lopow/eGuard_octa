@@ -39,6 +39,7 @@ void xm1110_set_gps_active(const xm1110_t *dev) {
     char randomByte = '%';
     
     i2c_acquire(BUS);
+    // In theory, any byte can be used to wake up GNSS module (but not working)
     i2c_write_byte(BUS, ADDR, randomByte, 0);
     i2c_write_reg(BUS, ADDR, REG_W, randomByte, 0);
     i2c_release(BUS);
@@ -48,6 +49,7 @@ void xm1110_set_gps_active(const xm1110_t *dev) {
 
 void xm1110_set_gps_standby(const xm1110_t *dev) {
     assert(dev);
+    // Send the folllowing command to put the GNSS module in standby
     char standby_command[21] = "$PMTK161,0*28\r\n";
 
     i2c_acquire(BUS);
@@ -60,6 +62,7 @@ void xm1110_set_gps_standby(const xm1110_t *dev) {
 
 void xm1110_glp_mode(const xm1110_t *dev) {
     assert(dev);
+    // Send the folllowing command to put the GNSS module in GLP mode (GNSS Low Power)
     char glp_command[21] = "$PMTK262,3*2B\r\n";
 
     i2c_acquire(BUS);
