@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "periph/i2c.h"
+#include "periph/uart.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -43,6 +44,7 @@ typedef struct {
     uint8_t i2c_addr;           /**< slave address */
     uint8_t r_addr;             /**< the sensors register address on the I2C bus     */
     uint8_t w_addr;             /**< the sensors register address on the I2C bus     */
+    uart_t uart;
 } xm1110_params_t;
 
 typedef struct {
@@ -58,10 +60,9 @@ void xm1110_set_gps_active(const xm1110_t *dev);
 
 void xm1110_set_gps_standby(const xm1110_t *dev);
 
+void xm1110_glp_mode(const xm1110_t *dev);
+
 int xm1110_read(const xm1110_t *dev, xm1110_data_t *xmdata);
-
-bool check_xm1110_ready(const xm1110_t *dev);
-
 
 #ifdef __cplusplus
 }

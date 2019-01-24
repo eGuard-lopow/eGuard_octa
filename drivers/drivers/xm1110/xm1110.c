@@ -22,10 +22,6 @@
 #define REG_R       (dev->p.r_addr)
 #define REG_W       (dev->p.w_addr)
 
-// #define BUS         I2C_DEV(1)
-// #define ADDR        (0x10)
-// #define REG_R       (0x21)
-
 int xm1110_init(xm1110_t *dev, const xm1110_params_t *params) {
     // uint8_t tmp = 0;
 
@@ -35,22 +31,46 @@ int xm1110_init(xm1110_t *dev, const xm1110_params_t *params) {
     /* initialize the device descriptor */
     memcpy(&dev->p, params, sizeof(xm1110_params_t));
 
-    // /* setup the I2C bus */
-    // i2c_acquire(BUS);
-
-    // i2c_read_reg(BUS, ADR, TCS37727_ID, &tmp, 0);
-    // if (tmp == 0) {
-    //     i2c_release(BUS);
-    //     LOG_ERROR("[tcs37727] init: error while reading ID register\n");
-    //     return XM1110_NO_DEV;
-    // }
-
     return XM1110_OK;
 }
 
-void xm1110_set_gps_active(const xm1110_t *dev);
+void xm1110_set_gps_active(const xm1110_t *dev) {
+    assert(dev);
+    char randomByte = '%';
+    
+    i2c_acquire(BUS);
+    i2c_write_byte(BUS, ADDR, randomByte, 0);
+    i2c_write_reg(BUS, ADDR, REG_W, randomByte, 0);
+    i2c_release(BUS);
 
-void xm1110_set_gps_standby(const xm1110_t *dev);
+    printf("\n(GPS) active.");
+}
+
+void xm1110_set_gps_standby(const xm1110_t *dev) {
+    assert(dev);
+    char standby_command[21] = "$PMTK161,0*28\r\n";
+
+    i2c_acquire(BUS);
+    for(int i = 0; i<21; i++) {
+        i2c_write_byte(BUS, ADDR, standby_command[i], 0);
+    }
+    i2c_release(BUS);
+    printf("\n(GPS) standby.\n");
+}
+
+void xm1110_glp_mode(const xm1110_t *dev) {
+    assert(dev);
+    char glp_command[21] = "$PMTK262,3*2B\r\n";
+
+    i2c_acquire(BUS);
+    // i2c_write_regs(BUS, ADDR, REG_W, &glp_command, 21, 0);
+    for(int i = 0; i<21; i++) {
+        i2c_write_byte(BUS, ADDR, glp_command[i], 0);
+    }
+    i2c_release(BUS);
+
+    printf("\n(GPS) GLP activated.\n");
+}
 
 int xm1110_read(const xm1110_t *dev, xm1110_data_t *xmdata) {
 
@@ -58,16 +78,7 @@ int xm1110_read(const xm1110_t *dev, xm1110_data_t *xmdata) {
     int res;
     i2c_acquire(BUS);
     for(int i = 0; i<255; i++) {
-
-        // res = i2c_read_reg(BUS, ADDR, REG_R, &xmdata->data[i], 0);
         res = i2c_read_byte(BUS, ADDR, &xmdata->data[i], 0);
-
-
-        // printf("%d\n", xmdata->data[i]);
-
-        if( res != 0) {
-            printf("\n\nError int: %d\n", res);
-        }
     }
     i2c_release(BUS);
 
@@ -84,26 +95,9 @@ int xm1110_read(const xm1110_t *dev, xm1110_data_t *xmdata) {
         printf("EOPNOTSUPP \n");
     } else if( res==-EAGAIN ) {
         printf("EAGAIN \n");
-    }
-
-    return 0;
-}
-
-bool check_xm1110_ready(const xm1110_t *dev) {
-    assert(dev);
-    int dataCheck;
-    int res;
-    i2c_acquire(BUS);
-    res = i2c_read_reg(BUS, ADDR, REG_R, &dataCheck, 0);
-    i2c_release(BUS);
-
-    if( res != 0) {
+    } else if(res != 0) {
         printf("\n\nError int: %d\n", res);
     }
 
-    if(dataCheck==XM1110_NO_DATA) {
-        return false;
-    } else {
-        return true;
-    }
+    return 0;
 }

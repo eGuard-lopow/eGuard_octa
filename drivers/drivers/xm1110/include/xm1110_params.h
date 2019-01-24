@@ -33,7 +33,7 @@ extern "C" {
  * @{
  */
 #ifndef XM1110_PARAM_I2C
-#define XM1110_PARAM_I2C            I2C_DEV(1)
+#define XM1110_PARAM_I2C            (I2C_DEV(1))
 #endif
 #ifndef XM1110_PARAM_I2C_ADDR
 #define XM1110_PARAM_I2C_ADDR       (0x10)
@@ -45,16 +45,12 @@ extern "C" {
 #define XM1110_PARAM_W_ADDR         (0x20)
 #endif
 
-// #ifndef XM1110_PARAM_GPS_PIN
-// #define XM1110_PARAM_GPS_PIN        (GPIO_PIN(0, 0))
-// #endif
-
 
 #ifndef XM1110_PARAMS
 #define XM1110_PARAMS                   { .i2c_bus   = XM1110_PARAM_I2C,        \
                                           .i2c_addr  = XM1110_PARAM_I2C_ADDR,   \
-                                          .r_addr    = XM1110_PARAM_R_ADDR,    \
-                                          .w_addr    = XM1110_PARAM_W_ADDR }
+                                          .r_addr    = XM1110_PARAM_R_ADDR,     \
+                                          .w_addr    = XM1110_PARAM_W_ADDR}
 #endif
 #ifndef XM1110_SAUL_INFO
 #define XM1110_SAUL_INFO                { .name = "xm1110" }
