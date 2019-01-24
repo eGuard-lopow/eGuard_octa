@@ -128,6 +128,8 @@ static const i2c_conf_t i2c_config[] = {
 
 ### GPS
 
+#### General
+
 The global (outdoor) position of the eGuard is determined by two variables; latitude and longitude. These variables represent the position on the earth.
 
 GPS data is presented in NMEA data. NMEA data can have different formats for different kinds of data. Basically, it consists of structured characters. Data is kept in the buffer (255 bytes) of the GPS module. We can read the data from the buffer sequentially through I2C.
@@ -152,6 +154,10 @@ The data fiels are seperated using a comma. These are the fields:
 
 After reading through I2C and parsing the data, we send the latitude and longitude via LoRaWAN to the backend.
 
+#### Low Power Aspect
+Currently, the GPS module has a function to put the GNSS module in standby mode which operates correctly, but the wakeup function does not work. To wake up the GNSS module, a random byte has to be sent to the module. After testing, waking up the device did not work.
+> For this reason, the GPS is still always on.
+
 ### Temperature/humidity sensor
 
 The driver for the sht3x has been rewritten to support the integrated alarm mode. This makes it possible for the board to enter sleep mode and wake up by an interrupt driven by the temperature sensor.
@@ -172,7 +178,7 @@ The application was written with low power usage in mind. The different componen
 
 - SHT3X: Used in single shot mode, one measurement every 15 minutes.
 - LSM303AGR: Used in 10Hz continous mode.
-- XM110: The GPS sensor is not yet optimized for low power use. It is continously operating.
+- XM1110: The GPS sensor is not yet optimized for low power use. It is continously operating.
 - MURATA: The communication module automatically goes into idle mode when not in use. However, the used driver keeps the LED on at all times, generating a high idle current.
 - STM32L496ZGT6P: The used board has no support for low power mode in RIOT OS yet.  
 
