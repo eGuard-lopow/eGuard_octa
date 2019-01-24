@@ -1,4 +1,5 @@
 # eGuard_octa
+> More information about the backend in the [eGuard_backend](https://github.com/eGuard-lopow/eGuard_backend) folder.
 
 ## About
 The eGuard is a device which tracks the health of an electronic device by using sensors like an accelerometer, a light sensor, a temperature and humidity sensor, ...
