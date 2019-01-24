@@ -114,11 +114,7 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
       strncpy(token2,token,strlen(token)-1); //laatste karakters afsplitsen
 
       switch (minmea_sentence_id(token2, false)) {
-        case MINMEA_SENTENCE_RMC: { //$GNRMC
-          printf("\nGPS:   *Zin*:  %s\n",token2);
-  
-          // puts("GPS: START");
-
+        case MINMEA_SENTENCE_RMC: { //$GNRMC  
           if (minmea_parse_rmc(&frame, token2)) {
             printf("$RMC fixed-point coordinates and speed scaled to three decimal places: (%ld,%ld) %ld\n",
                     minmea_rescale(&frame.latitude, 100000),
@@ -129,7 +125,6 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
             longitude_int = minmea_rescale(&frame.longitude, 100000);
           }
           free(token2);
-          // puts("GPS: STOP");
         } break;
 
         default: {
@@ -157,10 +152,10 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
 
 void readLightSensor(tcs34725_t* dev_tcs, tcs34725_data_t* data_tcs, uint8_t* payload) {
   tcs34725_read(dev_tcs, data_tcs);
-  printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
-      data_tcs->red, data_tcs->green, data_tcs->blue, data_tcs->clear);
-  printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
-      data_tcs->ct, data_tcs->lux, dev_tcs->again, dev_tcs->p.atime);
+  //printf("R: %5"PRIu32" G: %5"PRIu32" B: %5"PRIu32" C: %5"PRIu32"\r\n",
+  //    data_tcs->red, data_tcs->green, data_tcs->blue, data_tcs->clear);
+  //printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
+  //    data_tcs->ct, data_tcs->lux, dev_tcs->again, dev_tcs->p.atime);
   payload[3] = (data_tcs->lux & 0xFF000000) >> 24;
   payload[2] = (data_tcs->lux & 0x00FF0000) >> 16;
   payload[1] = (data_tcs->lux & 0x0000FF00) >> 8;
@@ -169,7 +164,8 @@ void readLightSensor(tcs34725_t* dev_tcs, tcs34725_data_t* data_tcs, uint8_t* pa
   if(payload[3] != 0 || payload[2] != 0 || payload[1] != 0){
     payload[0] = 255;
   }
-  printf("Data to sent from light sensor: %d Lux", payload[0]);
+  printf("Total light strength: Lux: %6"PRIu32"\n", data_tcs->lux);
+  printf("Data to sent from light sensor: %d Lux\n", payload[0]);
 }
 
 
