@@ -144,10 +144,10 @@ The data fiels are seperated using a comma. These are the fields:
 - 3rd field defines the status (Active or Void)
 - 4th field defines latitude
 - 5th field defines longitude
-- 6th fiels defines speed (knots)
+- 6th field defines speed (knots)
 - 7th field defines track angle
 - 8th field defines the date
-- 9th field defines th magnetic variation in degrees
+- 9th field defines the magnetic variation in degrees
 - 10th field defines the checksum data, always begins with `*`
 
 After reading through I2C and parsing the data, we send the latitude and longitude via LoRaWAN to the backend.
