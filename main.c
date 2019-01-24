@@ -161,12 +161,12 @@ void readLightSensor(tcs34725_t* dev_tcs, tcs34725_data_t* data_tcs, uint8_t* pa
       data_tcs->red, data_tcs->green, data_tcs->blue, data_tcs->clear);
   printf("CT : %5"PRIu32" Lux: %6"PRIu32" AGAIN: %2d ATIME %"PRIu32"\r\n",
       data_tcs->ct, data_tcs->lux, dev_tcs->again, dev_tcs->p.atime);
-  payload[0] = (data_tcs->lux & 0xFF000000) >> 24;
-  payload[1] = (data_tcs->lux & 0x00FF0000) >> 16;
-  payload[2] = (data_tcs->lux & 0x0000FF00) >> 8;
-  payload[3] = (data_tcs->lux & 0x000000FF);
+  payload[3] = (data_tcs->lux & 0xFF000000) >> 24;
+  payload[2] = (data_tcs->lux & 0x00FF0000) >> 16;
+  payload[1] = (data_tcs->lux & 0x0000FF00) >> 8;
+  payload[0] = (data_tcs->lux & 0x000000FF);
 
-  if(payload[0] != 0 || payload[1] != 0 || payload[2] != 0){
+  if(payload[3] != 0 || payload[2] != 0 || payload[1] != 0){
     payload[0] = 255;
   }
   printf("Data to sent from light sensor: %d Lux", payload[0]);
