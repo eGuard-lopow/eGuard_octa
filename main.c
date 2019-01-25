@@ -96,45 +96,40 @@ void readGPS(xm1110_t* dev, xm1110_data_t* xmdata, uint8_t* payload) {
   uint32_t longitude_int = 0;
 
   int res = 0;
-  // char* test = "$GNRMC,105824.000,A,5110.577055,N,00420.844651,E,0.42,285.58,080119,,,A*73";
-
-
+  // VB: char* test = "$GNRMC,105824.000,A,5110.577055,N,00420.844651,E,0.42,285.58,080119,,,A*73";
 
   // Read GPS coordinates and store them in payload
-  for(int i = 0; i<5; i++) {
-    res = xm1110_read(dev, xmdata);
-    if ( res != 0 ) {
-      printf("GPS result != 0, something failed?");
-    }
+  res = xm1110_read(dev, xmdata);
+  if ( res != 0 ) {
+    printf("GPS result != 0, something failed?");
+  }
 
-    
-    token = strtok (xmdata->data,"\n");
-    while (token != NULL) {
-      char *token2 = (char *) calloc(strlen(token),sizeof(char));
-      strncpy(token2,token,strlen(token)-1); //laatste karakters afsplitsen
+  
+  token = strtok (xmdata->data,"\n");
+  while (token != NULL) {
+    char *token2 = (char *) calloc(strlen(token),sizeof(char));
+    strncpy(token2,token,strlen(token)-1); // Split off last character
 
-      switch (minmea_sentence_id(token2, false)) {
-        case MINMEA_SENTENCE_RMC: { //$GNRMC  
-          if (minmea_parse_rmc(&frame, token2)) {
-            printf("$RMC fixed-point coordinates and speed scaled to three decimal places: (%ld,%ld) %ld\n",
-                    minmea_rescale(&frame.latitude, 100000),
-                    minmea_rescale(&frame.longitude, 100000),
-                    frame.speed.value);
+    switch (minmea_sentence_id(token2, false)) {
+      case MINMEA_SENTENCE_RMC: { //$GNRMC  
+        if (minmea_parse_rmc(&frame, token2)) { // If correct RMC sentence (including checksum)
+          printf("$RMC fixed-point coordinates and speed scaled to three decimal places: (%ld,%ld) %ld\n",
+                  minmea_rescale(&frame.latitude, 100000),
+                  minmea_rescale(&frame.longitude, 100000),
+                  frame.speed.value);
 
-            latitude_int = minmea_rescale(&frame.latitude, 100000);
-            longitude_int = minmea_rescale(&frame.longitude, 100000);
-          }
-          free(token2);
-        } break;
-
-        default: {
-          //do nothing
+          latitude_int = minmea_rescale(&frame.latitude, 100000);
+          longitude_int = minmea_rescale(&frame.longitude, 100000);
         }
+      } break;
+
+      default: {
+        //do nothing
       }
-    
-      
-      token = strtok (NULL, "\n");
     }
+    free(token2);
+    
+    token = strtok (NULL, "\n");
   }
 
   payload[0] = (latitude_int & 0xFF000000) >> 24;
